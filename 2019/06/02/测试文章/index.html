@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Hexo</title>
+  <title>测试文章 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="测试是否生效">
+<meta name="keywords" content="测试数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="测试文章">
+<meta property="og:url" content="http://yoursite.com/2019/06/02/测试文章/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="测试是否生效">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-06-02T04:58:11.260Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="测试文章">
+<meta name="twitter:description" content="测试是否生效">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -150,112 +155,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    <article id="post-java类加载-链接-初始化" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-测试文章" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/06/02/java类加载-链接-初始化/">java类加载,链接,初始化</a>
-    </h1>
-  
-
-        
-        <a href="/2019/06/02/java类加载-链接-初始化/" class="archive-article-date">
-  	<time datetime="2019-06-02T06:50:25.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="java虚拟机的平台无关性是如何实现的？"><a href="#java虚拟机的平台无关性是如何实现的？" class="headerlink" title="java虚拟机的平台无关性是如何实现的？"></a>java虚拟机的平台无关性是如何实现的？</h4><p>java文件&gt;&gt;&gt;通过编译 成class文件（字节码文件）。</p>
-<p>为什么叫做字节码文件，因为文件中存放的都是二进制的字节码。</p>
-<p>java虚拟机加载class文件（详细类加载的过程不描述），最后的结果是在java虚拟机的方法区生成class对象，将class文件以各种不同的对象实例的方式存储到常量池中。</p>
-<p>java做为一种高级的编程语言，直接在硬件机器上运行是不现实的，一般通过虚拟机先进行转换，转换成虚拟机能够试别的字节码，然后虚拟机在运行字节码的时候，解释成0101 这种的机器码，这也就解释了为什么一次编译，到处运行，因为编译生成的字节码文件时一致的。虚拟机在运行的时候解释称的机器码是根据平台生成的机器码有所不同</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 最左列是偏移；中间列是给虚拟机读的机器码；最右列是给人读的代码</span><br><span class="line"><span class="number">0x00</span>:  b2 <span class="number">00</span> <span class="number">02</span>         getstatic java.lang.System.out</span><br><span class="line"><span class="number">0x03</span>:  <span class="number">12</span> <span class="number">03</span>            ldc <span class="string">"Hello, World!"</span></span><br><span class="line"><span class="number">0x05</span>:  b6 <span class="number">00</span> <span class="number">04</span>         invokevirtual java.io.PrintStream.println</span><br><span class="line"><span class="number">0x08</span>:  b1               <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="java编译和反编译的过程"><a href="#java编译和反编译的过程" class="headerlink" title="java编译和反编译的过程"></a>java编译和反编译的过程</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java代码</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Hello</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">        a ++;</span><br><span class="line">        b++;</span><br><span class="line">        System.out.println(a);</span><br><span class="line">        System.out.println(b);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>先编译javac  再反编译 javap（反编译的意思就是解释称人类能看动的字节码文件）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//反编译的结果</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">compile</span>.<span class="title">Hello</span> </span>&#123;</span><br><span class="line">  <span class="keyword">public</span> compile.Hello(); <span class="comment">//自动生成的空参构造</span></span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: aload_0</span><br><span class="line">       1: invokespecial #1//调用了父类空参构造            // Method java/lang/Object."&lt;init&gt;":()V</span><br><span class="line">       <span class="number">4</span>: <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(java.lang.String[])</span></span>;</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: iconst_1 <span class="comment">//第一个变量1</span></span><br><span class="line">       <span class="number">1</span>: istore_1<span class="comment">//赋值给a</span></span><br><span class="line">       <span class="number">2</span>: iconst_2<span class="comment">//第二个变量2</span></span><br><span class="line">       <span class="number">3</span>: istore_2<span class="comment">//赋值给b</span></span><br><span class="line">       <span class="number">4</span>: iinc          <span class="number">1</span>, <span class="number">1</span><span class="comment">//第一个变量加1</span></span><br><span class="line">       <span class="number">7</span>: iinc          <span class="number">2</span>, <span class="number">1</span><span class="comment">//第二个变量加2</span></span><br><span class="line">      10: getstatic     #2   //调用静态方法               // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">      <span class="number">13</span>: iload_1</span><br><span class="line">      14: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V</span><br><span class="line">      17: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">      <span class="number">20</span>: iload_2</span><br><span class="line">      21: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V</span><br><span class="line">      <span class="number">24</span>: <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="java虚拟机是如何运行字节码的"><a href="#java虚拟机是如何运行字节码的" class="headerlink" title="java虚拟机是如何运行字节码的"></a>java虚拟机是如何运行字节码的</h4><p>java代码首先编译成字节码，加载到虚拟机，加载后会在方法区种生成java类型。实际虚拟机运行的时候是执行的方法区种的代码</p>
-<p>java虚拟机是通过堆和栈来存储运行时数据</p>
-<p>在运行的过程中，每次调用进入一个java方法，jvm当前线程的方法栈中会生成一个栈帧，用以存放局部变量和字节码的操作数。退出方法的时候。将之抛弃</p>
-<p>java在运行的时候，需要将字节码解释成机器码。</p>
-<p>两种方式，一种是解释执行。即逐条翻译成机器码并执行（不常用）</p>
-<p>第二种是即时编译，即将一个方法中所有的字节码编译成机器码后再执行（小部分的热点代码）</p>
-<h3 id="z栈帧-局部变量表-操作数栈"><a href="#z栈帧-局部变量表-操作数栈" class="headerlink" title="z栈帧 局部变量表 操作数栈"></a>z栈帧 局部变量表 操作数栈</h3><img src="D:/7moor/2019/keep/javaAgain/java%E5%9F%BA%E7%A1%80/image/stack.png">
-
-<p>jvm运行时的栈主要是存放方法的，每一个方法执行的过程中都会形成栈帧，然后入栈，栈帧可以理解为数据结构</p>
-<p>栈帧中包括局部变量和操作数栈（又一个栈类型用了操作局部变量使用） 如上图</p>
-<p>最后的结果是操作数栈栈顶的元素就是需要方法弹出的结果</p>
-<p>递归调用出现 stackoverflow的时候 就是 虚拟机栈的深度太深了，超出了栈的深度</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">java类加载那些事</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/06/02/java类加载-链接-初始化/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-测试文章" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/06/02/测试文章/">测试文章</a>
+    <h1 class="article-title" itemprop="name">
+      测试文章
     </h1>
   
 
@@ -271,6 +178,27 @@
         <h3 id="测试是否生效"><a href="#测试是否生效" class="headerlink" title="测试是否生效"></a>测试是否生效</h3>
       
 
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
       
     </div>
     <div class="article-info article-info-index">
@@ -290,16 +218,84 @@
       
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/06/02/测试文章/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/06/02/测试文章/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2019/06/02/java类加载-链接-初始化/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          java类加载,链接,初始化
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/06/02/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Hello World</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -319,83 +315,14 @@
 
 
 
-
   
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/06/02/hello-world/">Hello World</a>
-    </h1>
   
 
-        
-        <a href="/2019/06/02/hello-world/" class="archive-article-date">
-  	<time datetime="2019-06-02T03:49:33.298Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/06/02/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
+  
 
   
+
   
 
 
@@ -418,8 +345,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
