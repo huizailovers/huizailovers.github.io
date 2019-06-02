@@ -6,16 +6,16 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>java类加载,链接,初始化 | Hexo</title>
+  <title>java类加载,链接,初始化 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="java虚拟机的平台无关性是如何实现的？java文件&amp;gt;&amp;gt;&amp;gt;通过编译 成class文件（字节码文件）。 为什么叫做字节码文件，因为文件中存放的都是二进制的字节码。 java虚拟机加载class文件（详细类加载的过程不描述），最后的结果是在java虚拟机的方法区生成class对象，将class文件以各种不同的对象实例的方式存储到常量池中。 java做为一种高级的编程语言，直接在硬件机">
 <meta name="keywords" content="java类加载那些事">
 <meta property="og:type" content="article">
 <meta property="og:title" content="java类加载,链接,初始化">
 <meta property="og:url" content="http://yoursite.com/2019/06/02/java类加载-链接-初始化/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="java虚拟机的平台无关性是如何实现的？java文件&amp;gt;&amp;gt;&amp;gt;通过编译 成class文件（字节码文件）。 为什么叫做字节码文件，因为文件中存放的都是二进制的字节码。 java虚拟机加载class文件（详细类加载的过程不描述），最后的结果是在java虚拟机的方法区生成class对象，将class文件以各种不同的对象实例的方式存储到常量池中。 java做为一种高级的编程语言，直接在硬件机">
-<meta property="og:locale" content="default">
+<meta property="og:locale" content="golang，java">
 <meta property="og:image" content="d:/7moor/2019/keep/javaAgain/java%E5%9F%BA%E7%A1%80/image/stack.png">
 <meta property="og:updated_time" content="2019-06-02T06:51:28.587Z">
 <meta name="twitter:card" content="summary">
@@ -23,7 +23,7 @@
 <meta name="twitter:description" content="java虚拟机的平台无关性是如何实现的？java文件&amp;gt;&amp;gt;&amp;gt;通过编译 成class文件（字节码文件）。 为什么叫做字节码文件，因为文件中存放的都是二进制的字节码。 java虚拟机加载class文件（详细类加载的过程不描述），最后的结果是在java虚拟机的方法区生成class对象，将class文件以各种不同的对象实例的方式存储到常量池中。 java做为一种高级的编程语言，直接在硬件机">
 <meta name="twitter:image" content="d:/7moor/2019/keep/javaAgain/java%E5%9F%BA%E7%A1%80/image/stack.png">
   
-    <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
   
     <link rel="icon" href="/favicon.png">
@@ -53,7 +53,7 @@
 			<img src class="js-avatar">
 		</a>
 		<hgroup>
-		  <h1 class="header-author"><a href="/">John Doe</a></h1>
+		  <h1 class="header-author"><a href="/">张春辉</a></h1>
 		</hgroup>
 		
 
@@ -111,7 +111,7 @@
 				<img src class="js-avatar">
 			</div>
 			<hgroup>
-			  <h1 class="header-author js-header-author">John Doe</h1>
+			  <h1 class="header-author js-header-author">张春辉</h1>
 			</hgroup>
 			
 			
@@ -304,6 +304,15 @@
   
 <nav id="article-nav">
   
+    <a href="/2019/06/02/servlet源码解析/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          servlet源码解析
+        
+      </div>
+    </a>
+  
   
     <a href="/2019/06/02/测试文章/" id="article-nav-older" class="article-nav-link-wrap">
       <div class="article-nav-title">测试文章</div>
@@ -349,7 +358,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2019 John Doe
+    		&copy; 2019 张春辉
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
@@ -432,11 +441,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
             
             <div class="clearfix"></div>
