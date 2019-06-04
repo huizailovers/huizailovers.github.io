@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: slice切片那些事 | 张春辉个人博客</title>
+  <title>golang显式类型转换和断言 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="张春辉个人博客">
-<meta property="og:url" content="http://yoursite.com/tags/slice切片那些事/index.html">
+  <meta name="description" content="显示类型转换12345// T(v) 显示转换var i int32 = 100var n1 int8 =  int8 (i)var n2 int32 = int32(i) //从低精度转成高精度var n3 int64 = int64(32) //从高精度转成低精度会按照溢出处理  类型断言12345678910111213//类型断言是对接口类型进行断言，所有类型都实现了空接口，通过断言，得到">
+<meta name="keywords" content="显示类型转换，int和string类型之间转换，断言">
+<meta property="og:type" content="article">
+<meta property="og:title" content="golang显式类型转换和断言">
+<meta property="og:url" content="http://yoursite.com/2019/06/03/golang显式类型转换和断言/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
+<meta property="og:description" content="显示类型转换12345// T(v) 显示转换var i int32 = 100var n1 int8 =  int8 (i)var n2 int32 = int32(i) //从低精度转成高精度var n3 int64 = int64(32) //从高精度转成低精度会按照溢出处理  类型断言12345678910111213//类型断言是对接口类型进行断言，所有类型都实现了空接口，通过断言，得到">
 <meta property="og:locale" content="golang，java">
+<meta property="og:updated_time" content="2019-06-04T14:15:26.643Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="张春辉个人博客">
+<meta name="twitter:title" content="golang显式类型转换和断言">
+<meta name="twitter:description" content="显示类型转换12345// T(v) 显示转换var i int32 = 100var n1 int8 =  int8 (i)var n2 int32 = int32(i) //从低精度转成高精度var n3 int64 = int64(32) //从高精度转成低精度会按照溢出处理  类型断言12345678910111213//类型断言是对接口类型进行断言，所有类型都实现了空接口，通过断言，得到">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -150,60 +155,172 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-golang显式类型转换和断言" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/03/slice切片/" class="archive-article-date">
-  	<time datetime="2019-06-02T16:05:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/03/slice切片/">slice切片</a>
+    <h1 class="article-title" itemprop="name">
+      golang显式类型转换和断言
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/06/03/golang显式类型转换和断言/" class="archive-article-date">
+  	<time datetime="2019-06-03T13:04:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="显示类型转换"><a href="#显示类型转换" class="headerlink" title="显示类型转换"></a>显示类型转换</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// T(v) 显示转换</span></span><br><span class="line"><span class="keyword">var</span> i <span class="keyword">int32</span> = <span class="number">100</span></span><br><span class="line"><span class="keyword">var</span> n1 <span class="keyword">int8</span> =  <span class="keyword">int8</span> (i)</span><br><span class="line"><span class="keyword">var</span> n2 <span class="keyword">int32</span> = <span class="keyword">int32</span>(i) <span class="comment">//从低精度转成高精度</span></span><br><span class="line"><span class="keyword">var</span> n3 <span class="keyword">int64</span> = <span class="keyword">int64</span>(<span class="number">32</span>) <span class="comment">//从高精度转成低精度会按照溢出处理</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="类型断言"><a href="#类型断言" class="headerlink" title="类型断言"></a>类型断言</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//类型断言是对接口类型进行断言，所有类型都实现了空接口，通过断言，得到真实类型</span></span><br><span class="line"><span class="comment">// 安全类型断言</span></span><br><span class="line">&lt;目标类型的值&gt;，&lt;布尔参数&gt; := &lt;表达式&gt;.( 目标类型 )  </span><br><span class="line"></span><br><span class="line"><span class="comment">//非安全类型断言</span></span><br><span class="line">&lt;目标类型的值&gt; := &lt;表达式&gt;.( 目标类型 )</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> i <span class="keyword">interface</span>&#123;&#125; = <span class="built_in">new</span>(Student)</span><br><span class="line">    s, ok := i.(Student) <span class="comment">//必须使用ok，否则会panic </span></span><br><span class="line">    <span class="keyword">if</span> ok &#123;</span><br><span class="line">        fmt.Println(s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="空接口的最佳实践"><a href="#空接口的最佳实践" class="headerlink" title="空接口的最佳实践"></a>空接口的最佳实践</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义一个函数，该函数判断传递进来的参数是什么类型</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeJudge</span><span class="params">(<span class="keyword">type</span> <span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> v := v.(<span class="keyword">type</span>) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">bool</span>:</span><br><span class="line">        	fmt.Println(<span class="string">"bool 类型"</span>)</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">float32</span>：</span><br><span class="line">        	fmt.<span class="built_in">println</span>(<span class="string">"float32 类型"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">slice切片那些事</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">显示类型转换，int和string类型之间转换，断言</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/06/03/golang显式类型转换和断言/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/06/03/slice切片/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">slice切片</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -226,9 +343,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
