@@ -152,6 +152,87 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-java异常处理机制" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/01/java异常处理机制/">java异常处理机制</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/01/java异常处理机制/" class="archive-article-date">
+  	<time datetime="2019-07-01T05:02:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="异常处理的显示抛出异常和隐式抛出异常"><a href="#异常处理的显示抛出异常和隐式抛出异常" class="headerlink" title="异常处理的显示抛出异常和隐式抛出异常"></a>异常处理的显示抛出异常和隐式抛出异常</h3><p>显式：throw 关键字 手动将异常的实例抛出</p>
+<p>隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。</p>
+<h3 id="捕获异常的三种代码块"><a href="#捕获异常的三种代码块" class="headerlink" title="捕获异常的三种代码块"></a>捕获异常的三种代码块</h3><p>try — 标记需要进行异常监控的代码</p>
+<p>catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。</p>
+<p>finally – 一段必定会运行的代码。清理某些资源等</p>
+<h3 id="检查的异常和非检查的异常"><a href="#检查的异常和非检查的异常" class="headerlink" title="检查的异常和非检查的异常"></a>检查的异常和非检查的异常</h3><p>runtimeException 和 error属于非检查的异常。其他异常都是检查的异常。所有的检查的异常都需要try–catch 或者throws。以便于java编译器的编译时检查</p>
+<h3 id="java虚拟机如何捕获异常的"><a href="#java虚拟机如何捕获异常的" class="headerlink" title="java虚拟机如何捕获异常的?"></a>java虚拟机如何捕获异常的?</h3><p>编译生成的字节码中，每个方法都附带一个异常表，表中的每个条目都代表一个异常处理器。标记着 from，to,target 指针。以及所捕获的异常类型。from-to 代码的监控的访问。当异常触发的时候，jvm 会从上到下遍历异常 表。找到对应字节码所在的索引范围。如果异常类型一致。则处理异常。catch住。不一致。弹出当前方法的调用栈信息。</p>
+<h3 id="finally-代码块的编译"><a href="#finally-代码块的编译" class="headerlink" title="finally 代码块的编译"></a>finally 代码块的编译</h3><p>jvm编译器的做法，赋值finally中的代码内容。分别放到try -catch 代码块索引正常执行路径。以及异常执行路径的出口中。同时java编译器会生成一个异常条目。监控整个try –catch 代码，将捕获到的异常的target指针指向另一份复制的finally代码块。在finally代码块最后，java虚拟机会重新抛出异常。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">jvm 是如何来处理异常的</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/01/java异常处理机制/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-golang显式类型转换和断言" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -709,15 +790,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">

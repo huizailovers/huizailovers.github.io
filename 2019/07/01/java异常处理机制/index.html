@@ -6,20 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>测试文章 | 张春辉个人博客</title>
+  <title>java异常处理机制 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="测试是否生效">
-<meta name="keywords" content="测试数据">
+  <meta name="description" content="异常处理的显示抛出异常和隐式抛出异常显式：throw 关键字 手动将异常的实例抛出 隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。 捕获异常的三种代码块try — 标记需要进行异常监控的代码 catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。 finally – 一段必定会运行的代码。清理某些资源">
+<meta name="keywords" content="jvm 是如何来处理异常的">
 <meta property="og:type" content="article">
-<meta property="og:title" content="测试文章">
-<meta property="og:url" content="http://yoursite.com/2019/06/02/测试文章/index.html">
+<meta property="og:title" content="java异常处理机制">
+<meta property="og:url" content="http://yoursite.com/2019/07/01/java异常处理机制/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
-<meta property="og:description" content="测试是否生效">
+<meta property="og:description" content="异常处理的显示抛出异常和隐式抛出异常显式：throw 关键字 手动将异常的实例抛出 隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。 捕获异常的三种代码块try — 标记需要进行异常监控的代码 catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。 finally – 一段必定会运行的代码。清理某些资源">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-06-02T04:58:11.260Z">
+<meta property="og:updated_time" content="2019-07-01T05:22:05.078Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="测试文章">
-<meta name="twitter:description" content="测试是否生效">
+<meta name="twitter:title" content="java异常处理机制">
+<meta name="twitter:description" content="异常处理的显示抛出异常和隐式抛出异常显式：throw 关键字 手动将异常的实例抛出 隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。 捕获异常的三种代码块try — 标记需要进行异常监控的代码 catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。 finally – 一段必定会运行的代码。清理某些资源">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -155,27 +155,35 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-测试文章" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-java异常处理机制" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      测试文章
+      java异常处理机制
     </h1>
   
 
         
-        <a href="/2019/06/02/测试文章/" class="archive-article-date">
-  	<time datetime="2019-06-02T04:18:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
+        <a href="/2019/07/01/java异常处理机制/" class="archive-article-date">
+  	<time datetime="2019-07-01T05:02:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-01</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="测试是否生效"><a href="#测试是否生效" class="headerlink" title="测试是否生效"></a>测试是否生效</h3>
+        <h3 id="异常处理的显示抛出异常和隐式抛出异常"><a href="#异常处理的显示抛出异常和隐式抛出异常" class="headerlink" title="异常处理的显示抛出异常和隐式抛出异常"></a>异常处理的显示抛出异常和隐式抛出异常</h3><p>显式：throw 关键字 手动将异常的实例抛出</p>
+<p>隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。</p>
+<h3 id="捕获异常的三种代码块"><a href="#捕获异常的三种代码块" class="headerlink" title="捕获异常的三种代码块"></a>捕获异常的三种代码块</h3><p>try — 标记需要进行异常监控的代码</p>
+<p>catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。</p>
+<p>finally – 一段必定会运行的代码。清理某些资源等</p>
+<h3 id="检查的异常和非检查的异常"><a href="#检查的异常和非检查的异常" class="headerlink" title="检查的异常和非检查的异常"></a>检查的异常和非检查的异常</h3><p>runtimeException 和 error属于非检查的异常。其他异常都是检查的异常。所有的检查的异常都需要try–catch 或者throws。以便于java编译器的编译时检查</p>
+<h3 id="java虚拟机如何捕获异常的"><a href="#java虚拟机如何捕获异常的" class="headerlink" title="java虚拟机如何捕获异常的?"></a>java虚拟机如何捕获异常的?</h3><p>编译生成的字节码中，每个方法都附带一个异常表，表中的每个条目都代表一个异常处理器。标记着 from，to,target 指针。以及所捕获的异常类型。from-to 代码的监控的访问。当异常触发的时候，jvm 会从上到下遍历异常 表。找到对应字节码所在的索引范围。如果异常类型一致。则处理异常。catch住。不一致。弹出当前方法的调用栈信息。</p>
+<h3 id="finally-代码块的编译"><a href="#finally-代码块的编译" class="headerlink" title="finally 代码块的编译"></a>finally 代码块的编译</h3><p>jvm编译器的做法，赋值finally中的代码内容。分别放到try -catch 代码块索引正常执行路径。以及异常执行路径的出口中。同时java编译器会生成一个异常条目。监控整个try –catch 代码，将捕获到的异常的target指针指向另一份复制的finally代码块。在finally代码块最后，java虚拟机会重新抛出异常。</p>
+
       
 
       
@@ -209,7 +217,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">测试数据</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">jvm 是如何来处理异常的</a>
         		</li>
       		
 		</ul>
@@ -265,7 +273,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/06/02/测试文章/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/01/java异常处理机制/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -279,15 +287,11 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/06/02/java类加载-链接-初始化/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          java类加载,链接,初始化
-        
-      </div>
-    </a>
   
+    <a href="/2019/06/03/golang显式类型转换和断言/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">golang显式类型转换和断言</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
