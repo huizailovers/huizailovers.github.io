@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: slice切片那些事 | 张春辉个人博客</title>
+  <title>mybatis源码解析系列-3 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="张春辉个人博客">
-<meta property="og:url" content="http://yoursite.com/tags/slice切片那些事/index.html">
+  <meta name="description" content="jiang流程将mapper 接口映射到configuration的mapperRegistry|–xmlConfigBuild #mapperElement() 解析package标签 ​    |– configuration.addmapperRegistry() 将 包名添加到mapperRegistry ​              |–mappeRegistry.addMappers(">
+<meta name="keywords" content="mapper接口获取代码对象过程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mybatis源码解析系列-3">
+<meta property="og:url" content="http://yoursite.com/2019/07/06/mybatis源码解析系列-3/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
+<meta property="og:description" content="jiang流程将mapper 接口映射到configuration的mapperRegistry|–xmlConfigBuild #mapperElement() 解析package标签 ​    |– configuration.addmapperRegistry() 将 包名添加到mapperRegistry ​              |–mappeRegistry.addMappers(">
 <meta property="og:locale" content="golang，java">
+<meta property="og:updated_time" content="2019-07-06T10:20:56.322Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="张春辉个人博客">
+<meta name="twitter:title" content="mybatis源码解析系列-3">
+<meta name="twitter:description" content="jiang流程将mapper 接口映射到configuration的mapperRegistry|–xmlConfigBuild #mapperElement() 解析package标签 ​    |– configuration.addmapperRegistry() 将 包名添加到mapperRegistry ​              |–mappeRegistry.addMappers(">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -150,60 +155,196 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-mybatis源码解析系列-3" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/03/slice切片/" class="archive-article-date">
-  	<time datetime="2019-06-02T16:05:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/03/slice切片/">slice切片</a>
+    <h1 class="article-title" itemprop="name">
+      mybatis源码解析系列-3
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/07/06/mybatis源码解析系列-3/" class="archive-article-date">
+  	<time datetime="2019-07-06T09:29:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="jiang流程"><a href="#jiang流程" class="headerlink" title="jiang流程"></a>jiang流程</h3><h3 id="将mapper-接口映射到configuration的mapperRegistry"><a href="#将mapper-接口映射到configuration的mapperRegistry" class="headerlink" title="将mapper 接口映射到configuration的mapperRegistry"></a>将mapper 接口映射到configuration的mapperRegistry</h3><p>|–xmlConfigBuild #mapperElement() 解析package标签</p>
+<p>​    |– configuration.addmapperRegistry() 将 包名添加到mapperRegistry</p>
+<p>​              |–mappeRegistry.addMappers()将package下所有map接口生成的class加载到</p>
+<p>​             mappeRegistry.addMapper（）将type，记忆mapper代码类的对象添加到map中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">addMapper</span><span class="params">(Class&lt;T&gt; type)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">if</span> (type.isInterface()) &#123;</span><br><span class="line">     <span class="comment">// 如果Map集合中已经有该mapper接口的映射，就不需要再存储了</span></span><br><span class="line">     <span class="keyword">if</span> (hasMapper(type)) &#123;</span><br><span class="line">       <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Type "</span> + type + <span class="string">" is already known to the MapperRegistry."</span>);</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">boolean</span> loadCompleted = <span class="keyword">false</span>;</span><br><span class="line">     <span class="keyword">try</span> &#123;</span><br><span class="line">   	<span class="comment">// 将mapper接口以及它的代理对象存储到一个Map集合中，key为mapper接口类型，value为代理对象工厂</span></span><br><span class="line">       knownMappers.put(type, <span class="keyword">new</span> MapperProxyFactory&lt;T&gt;(type));</span><br><span class="line">       <span class="comment">// It's important that the type is added before the parser is run</span></span><br><span class="line">       <span class="comment">// otherwise the binding may automatically be attempted by the</span></span><br><span class="line">       <span class="comment">// mapper parser. If the type is already known, it won't try.</span></span><br><span class="line">       </span><br><span class="line">       <span class="comment">// 用来解析注解方式的mapper接口</span></span><br><span class="line">       MapperAnnotationBuilder parser = <span class="keyword">new</span> MapperAnnotationBuilder(config, type);</span><br><span class="line">       <span class="comment">// 解析注解方式的mapper接口</span></span><br><span class="line">       parser.parse();</span><br><span class="line">       loadCompleted = <span class="keyword">true</span>;</span><br><span class="line">     &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">       <span class="keyword">if</span> (!loadCompleted) &#123;</span><br><span class="line">         knownMappers.remove(type);</span><br><span class="line">       &#125;</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="获取mapper代码对象的过程"><a href="#获取mapper代码对象的过程" class="headerlink" title="获取mapper代码对象的过程"></a>获取mapper代码对象的过程</h3><p>入口  DefaultSqlSession#getMapper</p>
+<p>​    |– Configuration#getMapper</p>
+<p>​        |–MapperRegister#getMapper</p>
+<p>​            |–MapperProxyFactory#newInstance jdk动态代理的方式创建对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> T <span class="title">newInstance</span><span class="params">(MapperProxy&lt;T&gt; mapperProxy)</span> </span>&#123;</span><br><span class="line"><span class="comment">// 使用JDK动态代理方式，生成代理对象</span></span><br><span class="line">   <span class="keyword">return</span> (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), <span class="keyword">new</span> Class[] &#123; mapperInterface &#125;, mapperProxy);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">public</span> T <span class="title">newInstance</span><span class="params">(SqlSession sqlSession)</span> </span>&#123;</span><br><span class="line"><span class="comment">// 创建基于JDK实现的Mapper代理对象</span></span><br><span class="line">   <span class="keyword">final</span> MapperProxy&lt;T&gt; mapperProxy = <span class="keyword">new</span> MapperProxy&lt;&gt;(sqlSession, mapperInterface, methodCache);</span><br><span class="line">   <span class="keyword">return</span> newInstance(mapperProxy);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>mapperry.invoke() 反射调用方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     <span class="comment">// 是Interface接口还是Object类</span></span><br><span class="line">     <span class="keyword">if</span> (Object.class.equals(method.getDeclaringClass())) &#123;</span><br><span class="line">       <span class="keyword">return</span> method.invoke(<span class="keyword">this</span>, args);</span><br><span class="line">     &#125; <span class="keyword">else</span> <span class="keyword">if</span> (isDefaultMethod(method)) &#123;</span><br><span class="line">       <span class="keyword">return</span> invokeDefaultMethod(proxy, method, args);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">     <span class="keyword">throw</span> ExceptionUtil.unwrapThrowable(t);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">final</span> MapperMethod mapperMethod = cachedMapperMethod(method);</span><br><span class="line">   <span class="comment">// 执行sqlsession的方法</span></span><br><span class="line">   <span class="keyword">return</span> mapperMethod.execute(sqlSession, args);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>method.invoke() 反射调用方法</p>
+<p>本质是sqlSession的insert方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">execute</span><span class="params">(SqlSession sqlSession, Object[] args)</span> </span>&#123;</span><br><span class="line">    Object result;</span><br><span class="line">    <span class="keyword">switch</span> (command.getType()) &#123;</span><br><span class="line">      <span class="keyword">case</span> INSERT: &#123;</span><br><span class="line">    	Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">        result = rowCountResult(sqlSession.insert(command.getName(), param));</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    </p>
+<p>​    </p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">slice切片那些事</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">mapper接口获取代码对象过程</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/06/mybatis源码解析系列-3/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2019/07/06/mybatis源码解析系列-4/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          mybatis源码解析系列-4
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2019/07/06/mybatis源码解析系列-2/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">mybatis源码解析系列-2</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -226,9 +367,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
