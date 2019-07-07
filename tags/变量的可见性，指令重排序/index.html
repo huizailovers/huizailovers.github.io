@@ -6,20 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>mybatis源码解析系列-4 | 张春辉个人博客</title>
+  <title>Tag: 变量的可见性，指令重排序 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="执行流程入口        |–DefaultSqlSession#selectLIst  ​            |–CachingExecutor#query 默认走缓存 ​                |–BaseExecutor#query  ​                    |–SimpleExecutor#doQuery 执行器excutor 来执行查询 Configura">
-<meta name="keywords" content="sqlSession 执行主流程">
-<meta property="og:type" content="article">
-<meta property="og:title" content="mybatis源码解析系列-4">
-<meta property="og:url" content="http://yoursite.com/2019/07/06/mybatis源码解析系列-4/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="张春辉个人博客">
+<meta property="og:url" content="http://yoursite.com/tags/变量的可见性，指令重排序/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
-<meta property="og:description" content="执行流程入口        |–DefaultSqlSession#selectLIst  ​            |–CachingExecutor#query 默认走缓存 ​                |–BaseExecutor#query  ​                    |–SimpleExecutor#doQuery 执行器excutor 来执行查询 Configura">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-07T05:19:15.268Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="mybatis源码解析系列-4">
-<meta name="twitter:description" content="执行流程入口        |–DefaultSqlSession#selectLIst  ​            |–CachingExecutor#query 默认走缓存 ​                |–BaseExecutor#query  ​                    |–SimpleExecutor#doQuery 执行器excutor 来执行查询 Configura">
+<meta name="twitter:title" content="张春辉个人博客">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -155,192 +150,60 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-mybatis源码解析系列-4" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      mybatis源码解析系列-4
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2019" class="archive-year">2019</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2019/07/07/volatile关键字-可见性，指令重排序/" class="archive-article-date">
+  	<time datetime="2019-07-07T04:16:38.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-07</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2019/07/07/volatile关键字-可见性，指令重排序/">volatile关键字 可见性，指令重排序</a>
     </h1>
   
 
-        
-        <a href="/2019/07/06/mybatis源码解析系列-4/" class="archive-article-date">
-  	<time datetime="2019-07-06T10:56:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h3><p>入口        |–DefaultSqlSession#selectLIst </p>
-<p>​            |–CachingExecutor#query 默认走缓存</p>
-<p>​                |–BaseExecutor#query </p>
-<p>​                    |–SimpleExecutor#doQuery 执行器excutor 来执行查询</p>
-<p>Configuration#newStatementHandler  获取不同的statementHandler 对象</p>
-<p>​    |– prepareStatement#getConnection() 获取连接</p>
-<p>​        |–prepareStatement#parameterize（） 设置参数</p>
-<p>​       |– parameterize#execute（） 执行查询</p>
-<p>上述步骤是对jdbc的封装</p>
-<h3 id="BaseExecutor执行query代码。涉及到了一级缓存。一级缓存是sqlSession级别的缓存"><a href="#BaseExecutor执行query代码。涉及到了一级缓存。一级缓存是sqlSession级别的缓存" class="headerlink" title="BaseExecutor执行query代码。涉及到了一级缓存。一级缓存是sqlSession级别的缓存"></a>BaseExecutor执行query代码。涉及到了一级缓存。一级缓存是sqlSession级别的缓存</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">query</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">   ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">"executing a query"</span>).object(ms.getId());</span><br><span class="line">   <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Executor was closed."</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">if</span> (queryStack == <span class="number">0</span> &amp;&amp; ms.isFlushCacheRequired()) &#123;</span><br><span class="line">     clearLocalCache();</span><br><span class="line">   &#125;</span><br><span class="line">   List&lt;E&gt; list;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     queryStack++;</span><br><span class="line">     <span class="comment">// 从一级缓存中获取数据</span></span><br><span class="line">     list = resultHandler == <span class="keyword">null</span> ? (List&lt;E&gt;) localCache.getObject(key) : <span class="keyword">null</span>;</span><br><span class="line">     <span class="keyword">if</span> (list != <span class="keyword">null</span>) &#123;</span><br><span class="line">       handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);</span><br><span class="line">     &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">   	<span class="comment">// 如果一级缓存没有数据，则从数据库查询数据</span></span><br><span class="line">         <span class="comment">//执行数据库查询完后将结果存放到了缓存中。</span></span><br><span class="line">       list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">     queryStack--;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">if</span> (queryStack == <span class="number">0</span>) &#123;</span><br><span class="line">     <span class="keyword">for</span> (DeferredLoad deferredLoad : deferredLoads) &#123;</span><br><span class="line">       deferredLoad.load();</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="comment">// issue #601</span></span><br><span class="line">     deferredLoads.clear();</span><br><span class="line">     <span class="keyword">if</span> (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) &#123;</span><br><span class="line">       <span class="comment">// issue #482</span></span><br><span class="line">       clearLocalCache();</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> list;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-<p>设置参数的代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setParameters</span><span class="params">(PreparedStatement ps)</span> </span>&#123;</span><br><span class="line">		ErrorContext.instance().activity(<span class="string">"setting parameters"</span>).object(mappedStatement.getParameterMap().getId());</span><br><span class="line">		<span class="comment">// 获取要设置的参数映射信息</span></span><br><span class="line">		List&lt;ParameterMapping&gt; parameterMappings = boundSql.getParameterMappings();</span><br><span class="line">		<span class="keyword">if</span> (parameterMappings != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parameterMappings.size(); i++) &#123;</span><br><span class="line">				ParameterMapping parameterMapping = parameterMappings.get(i);</span><br><span class="line">				<span class="comment">// 只处理入参</span></span><br><span class="line">				<span class="keyword">if</span> (parameterMapping.getMode() != ParameterMode.OUT) &#123;</span><br><span class="line">					Object value;</span><br><span class="line">					<span class="comment">// 获取属性名称</span></span><br><span class="line">					String propertyName = parameterMapping.getProperty();</span><br><span class="line">					<span class="keyword">if</span> (boundSql.hasAdditionalParameter(propertyName)) &#123; <span class="comment">// issue #448 ask first for additional params</span></span><br><span class="line">						value = boundSql.getAdditionalParameter(propertyName);</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameterObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">						value = <span class="keyword">null</span>;</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) &#123;</span><br><span class="line">						value = parameterObject;</span><br><span class="line">					&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">						MetaObject metaObject = configuration.newMetaObject(parameterObject);</span><br><span class="line">						value = metaObject.getValue(propertyName);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// 获取每个参数的类型处理器，去设置入参和获取返回值</span></span><br><span class="line">					TypeHandler typeHandler = parameterMapping.getTypeHandler();</span><br><span class="line">					<span class="comment">// 获取每个参数的JdbcType</span></span><br><span class="line">					JdbcType jdbcType = parameterMapping.getJdbcType();</span><br><span class="line">					<span class="keyword">if</span> (value == <span class="keyword">null</span> &amp;&amp; jdbcType == <span class="keyword">null</span>) &#123;</span><br><span class="line">						jdbcType = configuration.getJdbcTypeForNull();</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						<span class="comment">// 给PreparedStatement设置参数</span></span><br><span class="line">						typeHandler.setParameter(ps, i + <span class="number">1</span>, value, jdbcType);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (TypeException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>处理结果集的代码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;Object&gt; <span class="title">handleResultSets</span><span class="params">(Statement stmt)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		ErrorContext.instance().activity(<span class="string">"handling results"</span>).object(mappedStatement.getId());</span><br><span class="line"></span><br><span class="line">		<span class="comment">// &lt;select&gt;标签的resultMap属性，可以指定多个值，多个值之间用逗号（,）分割</span></span><br><span class="line">		<span class="keyword">final</span> List&lt;Object&gt; multipleResults = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">		<span class="keyword">int</span> resultSetCount = <span class="number">0</span>;</span><br><span class="line">		<span class="comment">// 这里是获取第一个结果集，将传统JDBC的ResultSet包装成一个包含结果列元信息的ResultSetWrapper对象</span></span><br><span class="line">		ResultSetWrapper rsw = getFirstResultSet(stmt);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 这里是获取所有要映射的ResultMap（按照逗号分割出来的）</span></span><br><span class="line">		List&lt;ResultMap&gt; resultMaps = mappedStatement.getResultMaps();</span><br><span class="line">		<span class="comment">// 要映射的ResultMap的数量</span></span><br><span class="line">		<span class="keyword">int</span> resultMapCount = resultMaps.size();</span><br><span class="line">		validateResultMapsCount(rsw, resultMapCount);</span><br><span class="line">		<span class="comment">// 循环处理每个ResultMap，从第一个开始处理</span></span><br><span class="line">		<span class="keyword">while</span> (rsw != <span class="keyword">null</span> &amp;&amp; resultMapCount &gt; resultSetCount) &#123;</span><br><span class="line">			<span class="comment">// 得到结果映射信息</span></span><br><span class="line">			ResultMap resultMap = resultMaps.get(resultSetCount);</span><br><span class="line">			<span class="comment">// 处理结果集</span></span><br><span class="line">			<span class="comment">// 从rsw结果集参数中获取查询结果，再根据resultMap映射信息，将查询结果映射到multipleResults中</span></span><br><span class="line">			handleResultSet(rsw, resultMap, multipleResults, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">			rsw = getNextResultSet(stmt);</span><br><span class="line">			cleanUpAfterHandlingResultSet();</span><br><span class="line">			resultSetCount++;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 对应&lt;select&gt;标签的resultSets属性，一般不使用该属性</span></span><br><span class="line">		String[] resultSets = mappedStatement.getResultSets();</span><br><span class="line">		<span class="keyword">if</span> (resultSets != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">while</span> (rsw != <span class="keyword">null</span> &amp;&amp; resultSetCount &lt; resultSets.length) &#123;</span><br><span class="line">				ResultMapping parentMapping = nextResultMaps.get(resultSets[resultSetCount]);</span><br><span class="line">				<span class="keyword">if</span> (parentMapping != <span class="keyword">null</span>) &#123;</span><br><span class="line">					String nestedResultMapId = parentMapping.getNestedResultMapId();</span><br><span class="line">					ResultMap resultMap = configuration.getResultMap(nestedResultMapId);</span><br><span class="line">					handleResultSet(rsw, resultMap, <span class="keyword">null</span>, parentMapping);</span><br><span class="line">				&#125;</span><br><span class="line">				rsw = getNextResultSet(stmt);</span><br><span class="line">				cleanUpAfterHandlingResultSet();</span><br><span class="line">				resultSetCount++;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 如果只有一个结果集合，则直接从多结果集中取出第一个</span></span><br><span class="line">		<span class="keyword">return</span> collapseSingleResultList(multipleResults);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">sqlSession 执行主流程</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">变量的可见性，指令重排序</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/06/mybatis源码解析系列-4/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2019/07/07/五种单例设计模式/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          五种单例设计模式
-        
-      </div>
-    </a>
   
   
-    <a href="/2019/07/06/mybatis源码解析系列-3/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">mybatis源码解析系列-3</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
+    
 
 
           </div>
@@ -363,9 +226,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
+		isPost: false,
 		isArchive: false,
-		isTag: false,
+		isTag: true,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

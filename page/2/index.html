@@ -152,6 +152,227 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-servlet源码解析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/02/servlet源码解析/">servlet源码解析</a>
+    </h1>
+  
+
+        
+        <a href="/2019/06/02/servlet源码解析/" class="archive-article-date">
+  	<time datetime="2019-06-02T13:13:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="servlet的作用"><a href="#servlet的作用" class="headerlink" title="servlet的作用"></a>servlet的作用</h3><ul>
+<li>接收请求</li>
+<li>解析数据</li>
+<li>做出响应</li>
+</ul>
+<h3 id="servlet的体系结构"><a href="#servlet的体系结构" class="headerlink" title="servlet的体系结构"></a>servlet的体系结构</h3><ul>
+<li><p>servlet （intreface）</p>
+<ul>
+<li><p>生命周期中的三个方法 </p>
+<ul>
+<li><p>init（servletConfig config）</p>
+</li>
+<li><p>service（serveltRequest request ，servletReponse response）</p>
+</li>
+<li><p>destory（）</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>GenericServlet （abstract class）</p>
+<ul>
+<li><p>init（servletConfig config）</p>
+</li>
+<li><p>abstrat service（serveltRequest request ，servletReponse response）并没有实现具体的service方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//init方法的的代码</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> init（servletConfig config）&#123;</span><br><span class="line">  <span class="keyword">this</span>.config= config；</span><br><span class="line">  <span class="keyword">this</span>.init（）</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">  <span class="comment">//并没有具体的方法实现</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>HttpServlet （class）</p>
+<ul>
+<li><p>service  (serveltRequest request ，servletReponse response)</p>
+</li>
+<li><p>service（HttpServletRequest request ，HttpServletfRepsonse response）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//service中代码的具体实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> service（serveltRequest request ，servletReponse response）&#123;</span><br><span class="line">    HttpservletRequest request ;</span><br><span class="line">    HttpservletRepsonse response;</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        request = (HttpservletRequest) request; <span class="comment">//强转</span></span><br><span class="line">        response  = (HttpservletRepsonse) response;   </span><br><span class="line">        service（request，response）</span><br><span class="line">    &#125;<span class="keyword">catch</span>()&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> service（HttpServletRequest request ，HttpServletfRepsonse response）&#123;</span><br><span class="line">    String method =  request.getMethod();</span><br><span class="line">    <span class="keyword">if</span> (method.equals(<span class="string">"GET"</span>))&#123;</span><br><span class="line">        doGet(request,response); <span class="comment">//源码中一直在用if else 没明白为什么不用 swtich case</span></span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span>()&#123;</span><br><span class="line">        doPost(request,response)</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span>()&#123;</span><br><span class="line">        doDelete(request,response)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+</li>
+</ul>
+<p>###总结</p>
+<p>​    我们自定义的servlet 一般继承HttpServlet </p>
+<ul>
+<li><p>重写init() 方法来完成初始化</p>
+</li>
+<li><p>重写doGet（） doPost（）方法来实现具体的请求处理</p>
+</li>
+<li><p>重写destory（） 来释放资源等</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServlet</span> <span class="keyword">extends</span> <span class="title">HttpServlet</span></span>&#123;</span><br><span class="line">    <span class="meta">@override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//重写的是GenericServlet init（）</span></span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doGet</span><span class="params">(HttpServletRequest request,HttpServletResponse response)</span></span>&#123;</span><br><span class="line">         <span class="comment">//重写的是HttpServlet的doXXX方法</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> destory（）&#123;</span><br><span class="line">        <span class="comment">//重写的GenericServlet的desotry 方法</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">servelt的生命周期以及源码解析</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/06/02/servlet源码解析/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-java类加载-链接-初始化" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/02/java类加载-链接-初始化/">java类加载,链接,初始化</a>
+    </h1>
+  
+
+        
+        <a href="/2019/06/02/java类加载-链接-初始化/" class="archive-article-date">
+  	<time datetime="2019-06-02T06:50:25.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="java虚拟机的平台无关性是如何实现的？"><a href="#java虚拟机的平台无关性是如何实现的？" class="headerlink" title="java虚拟机的平台无关性是如何实现的？"></a>java虚拟机的平台无关性是如何实现的？</h4><p>java文件&gt;&gt;&gt;通过编译 成class文件（字节码文件）。</p>
+<p>为什么叫做字节码文件，因为文件中存放的都是二进制的字节码。</p>
+<p>java虚拟机加载class文件（详细类加载的过程不描述），最后的结果是在java虚拟机的方法区生成class对象，将class文件以各种不同的对象实例的方式存储到常量池中。</p>
+<p>java做为一种高级的编程语言，直接在硬件机器上运行是不现实的，一般通过虚拟机先进行转换，转换成虚拟机能够试别的字节码，然后虚拟机在运行字节码的时候，解释成0101 这种的机器码，这也就解释了为什么一次编译，到处运行，因为编译生成的字节码文件时一致的。虚拟机在运行的时候解释称的机器码是根据平台生成的机器码有所不同</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 最左列是偏移；中间列是给虚拟机读的机器码；最右列是给人读的代码</span><br><span class="line"><span class="number">0x00</span>:  b2 <span class="number">00</span> <span class="number">02</span>         getstatic java.lang.System.out</span><br><span class="line"><span class="number">0x03</span>:  <span class="number">12</span> <span class="number">03</span>            ldc <span class="string">"Hello, World!"</span></span><br><span class="line"><span class="number">0x05</span>:  b6 <span class="number">00</span> <span class="number">04</span>         invokevirtual java.io.PrintStream.println</span><br><span class="line"><span class="number">0x08</span>:  b1               <span class="keyword">return</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="java编译和反编译的过程"><a href="#java编译和反编译的过程" class="headerlink" title="java编译和反编译的过程"></a>java编译和反编译的过程</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java代码</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Hello</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> b = <span class="number">2</span>;</span><br><span class="line">        a ++;</span><br><span class="line">        b++;</span><br><span class="line">        System.out.println(a);</span><br><span class="line">        System.out.println(b);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先编译javac  再反编译 javap（反编译的意思就是解释称人类能看动的字节码文件）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//反编译的结果</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">compile</span>.<span class="title">Hello</span> </span>&#123;</span><br><span class="line">  <span class="keyword">public</span> compile.Hello(); <span class="comment">//自动生成的空参构造</span></span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: aload_0</span><br><span class="line">       1: invokespecial #1//调用了父类空参构造            // Method java/lang/Object."&lt;init&gt;":()V</span><br><span class="line">       <span class="number">4</span>: <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(java.lang.String[])</span></span>;</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: iconst_1 <span class="comment">//第一个变量1</span></span><br><span class="line">       <span class="number">1</span>: istore_1<span class="comment">//赋值给a</span></span><br><span class="line">       <span class="number">2</span>: iconst_2<span class="comment">//第二个变量2</span></span><br><span class="line">       <span class="number">3</span>: istore_2<span class="comment">//赋值给b</span></span><br><span class="line">       <span class="number">4</span>: iinc          <span class="number">1</span>, <span class="number">1</span><span class="comment">//第一个变量加1</span></span><br><span class="line">       <span class="number">7</span>: iinc          <span class="number">2</span>, <span class="number">1</span><span class="comment">//第二个变量加2</span></span><br><span class="line">      10: getstatic     #2   //调用静态方法               // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">      <span class="number">13</span>: iload_1</span><br><span class="line">      14: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V</span><br><span class="line">      17: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;</span><br><span class="line">      <span class="number">20</span>: iload_2</span><br><span class="line">      21: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V</span><br><span class="line">      <span class="number">24</span>: <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="java虚拟机是如何运行字节码的"><a href="#java虚拟机是如何运行字节码的" class="headerlink" title="java虚拟机是如何运行字节码的"></a>java虚拟机是如何运行字节码的</h4><p>java代码首先编译成字节码，加载到虚拟机，加载后会在方法区种生成java类型。实际虚拟机运行的时候是执行的方法区种的代码</p>
+<p>java虚拟机是通过堆和栈来存储运行时数据</p>
+<p>在运行的过程中，每次调用进入一个java方法，jvm当前线程的方法栈中会生成一个栈帧，用以存放局部变量和字节码的操作数。退出方法的时候。将之抛弃</p>
+<p>java在运行的时候，需要将字节码解释成机器码。</p>
+<p>两种方式，一种是解释执行。即逐条翻译成机器码并执行（不常用）</p>
+<p>第二种是即时编译，即将一个方法中所有的字节码编译成机器码后再执行（小部分的热点代码）</p>
+<h3 id="z栈帧-局部变量表-操作数栈"><a href="#z栈帧-局部变量表-操作数栈" class="headerlink" title="z栈帧 局部变量表 操作数栈"></a>z栈帧 局部变量表 操作数栈</h3><img src="D:/7moor/2019/keep/javaAgain/java%E5%9F%BA%E7%A1%80/image/stack.png">
+
+<p>jvm运行时的栈主要是存放方法的，每一个方法执行的过程中都会形成栈帧，然后入栈，栈帧可以理解为数据结构</p>
+<p>栈帧中包括局部变量和操作数栈（又一个栈类型用了操作局部变量使用） 如上图</p>
+<p>最后的结果是操作数栈栈顶的元素就是需要方法弹出的结果</p>
+<p>递归调用出现 stackoverflow的时候 就是 虚拟机栈的深度太深了，超出了栈的深度</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">java类加载那些事</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/06/02/java类加载-链接-初始化/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-测试文章" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -322,15 +543,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -338,7 +555,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -350,7 +571,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -358,11 +579,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
               </li>
             
             <div class="clearfix"></div>
