@@ -6,20 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>类的初始化顺序 | 张春辉个人博客</title>
+  <title>mybatis源码解析系列-主键生成 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="类的初始化java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。 类的初始化时机 1.new 对象  调用静态方法 或者访问静态变量    子类的初始化触发父类的初始化    反射生成对象    虚拟机启动，初始化主类    对象的初始化编译器为每一个类生成一个初始化实例的方法()">
-<meta name="keywords" content="类加载顺序">
+  <meta name="description" content="KeyGenerator123456789public interface KeyGenerator &amp;#123;    // SQL 执行前    void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter);    // SQL 执行后    void processAft">
+<meta name="keywords" content="主键返回">
 <meta property="og:type" content="article">
-<meta property="og:title" content="类的初始化顺序">
-<meta property="og:url" content="http://yoursite.com/2019/07/06/类的初始化顺序/index.html">
+<meta property="og:title" content="mybatis源码解析系列-主键生成">
+<meta property="og:url" content="http://yoursite.com/2019/07/14/mybatis源码解析系列-主键生成/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
-<meta property="og:description" content="类的初始化java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。 类的初始化时机 1.new 对象  调用静态方法 或者访问静态变量    子类的初始化触发父类的初始化    反射生成对象    虚拟机启动，初始化主类    对象的初始化编译器为每一个类生成一个初始化实例的方法()">
+<meta property="og:description" content="KeyGenerator123456789public interface KeyGenerator &amp;#123;    // SQL 执行前    void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter);    // SQL 执行后    void processAft">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-07T05:19:02.992Z">
+<meta property="og:updated_time" content="2019-07-14T13:47:14.034Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="类的初始化顺序">
-<meta name="twitter:description" content="类的初始化java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。 类的初始化时机 1.new 对象  调用静态方法 或者访问静态变量    子类的初始化触发父类的初始化    反射生成对象    虚拟机启动，初始化主类    对象的初始化编译器为每一个类生成一个初始化实例的方法()">
+<meta name="twitter:title" content="mybatis源码解析系列-主键生成">
+<meta name="twitter:description" content="KeyGenerator123456789public interface KeyGenerator &amp;#123;    // SQL 执行前    void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter);    // SQL 执行后    void processAft">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -155,57 +155,32 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-类的初始化顺序" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-mybatis源码解析系列-主键生成" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      类的初始化顺序
+      mybatis源码解析系列-主键生成
     </h1>
   
 
         
-        <a href="/2019/07/06/类的初始化顺序/" class="archive-article-date">
-  	<time datetime="2019-07-06T06:25:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
+        <a href="/2019/07/14/mybatis源码解析系列-主键生成/" class="archive-article-date">
+  	<time datetime="2019-07-14T13:35:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-14</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="类的初始化"><a href="#类的初始化" class="headerlink" title="类的初始化"></a>类的初始化</h3><p>java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到<clinit>方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。</clinit></p>
-<h3 id="类的初始化时机"><a href="#类的初始化时机" class="headerlink" title="类的初始化时机"></a>类的初始化时机</h3><ul>
-<li>1.new 对象</li>
-<li><ol start="2">
-<li>调用静态方法 或者访问静态变量</li>
-</ol>
-</li>
-<li><ol start="3">
-<li>子类的初始化触发父类的初始化</li>
-</ol>
-</li>
-<li><ol start="4">
-<li>反射生成对象</li>
-</ol>
-</li>
-<li><ol start="5">
-<li>虚拟机启动，初始化主类</li>
-</ol>
-</li>
-</ul>
-<h3 id="对象的初始化"><a href="#对象的初始化" class="headerlink" title="对象的初始化"></a>对象的初始化</h3><p>编译器为每一个类生成一个初始化实例的方法<init>()<br> 方法中主要内容 ：<br>     调用父类的<init>()<br>     初始化成员变量<br>     执行构造方法内的字节码</init></init></p>
-<h3 id="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"><a href="#静态变量，成员变量，静态代码块，代码块。构造函数执行过程" class="headerlink" title="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"></a>静态变量，成员变量，静态代码块，代码块。构造函数执行过程</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> String p_staticFieldString = <span class="string">"父类静态变量"</span>;</span><br><span class="line">	<span class="keyword">public</span> String p_filedString = <span class="string">"父类成员变量"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		System.out.println(p_staticFieldString);</span><br><span class="line">	&#125;</span><br><span class="line">	&#123;</span><br><span class="line">		System.out.println(p_filedString);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Parent</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"构造方法初始化"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//执行结果 </span></span><br><span class="line">父类静态变量</span><br><span class="line">父类成员变量</span><br><span class="line">构造方法初始化</span><br></pre></td></tr></table></figure>
+        <h3 id="KeyGenerator"><a href="#KeyGenerator" class="headerlink" title="KeyGenerator"></a>KeyGenerator</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">KeyGenerator</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SQL 执行前</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">processBefore</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SQL 执行后</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">processAfter</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>子类代码静态变量，成员变量。构造函数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> String c_staticFiled = <span class="string">"子类静态变量"</span>;</span><br><span class="line">	<span class="keyword">public</span> String c_filedS = <span class="string">"子类成员变量"</span>;</span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		System.out.println(c_staticFiled);</span><br><span class="line">	&#125;</span><br><span class="line">	&#123;</span><br><span class="line">		System.out.println(c_filedS);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Student</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"子类构造方法"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="三个实现类"><a href="#三个实现类" class="headerlink" title="三个实现类"></a>三个实现类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//主讲 Jdbc3KeyGenerator</span></span><br><span class="line"><span class="comment">// processBefore 空实现 </span></span><br><span class="line"><span class="comment">// processAfter 调用 processBatch</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processBatch</span><span class="params">(MappedStatement ms, Statement stmt, Object parameter)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// &lt;1&gt; 获得主键属性的配置。如果为空，则直接返回，说明不需要主键</span></span><br><span class="line">    <span class="keyword">final</span> String[] keyProperties = ms.getKeyProperties();</span><br><span class="line">    <span class="keyword">if</span> (keyProperties == <span class="keyword">null</span> || keyProperties.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ResultSet rs = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;2&gt; 获得返回的自增主键</span></span><br><span class="line">        rs = stmt.getGeneratedKeys();</span><br><span class="line">        <span class="keyword">final</span> Configuration configuration = ms.getConfiguration();</span><br><span class="line">        <span class="keyword">if</span> (rs.getMetaData().getColumnCount() &gt;= keyProperties.length) &#123;</span><br><span class="line">            <span class="comment">// &lt;3&gt; 获得唯一的参数对象</span></span><br><span class="line">            Object soleParam = getSoleParameter(parameter);</span><br><span class="line">            <span class="keyword">if</span> (soleParam != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// &lt;3.1&gt; 设置主键们，到参数 soleParam 中</span></span><br><span class="line">                assignKeysToParam(configuration, rs, keyProperties, soleParam);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// &lt;3.2&gt; 设置主键们，到参数 parameter 中</span></span><br><span class="line">                assignKeysToOneOfParams(configuration, rs, keyProperties, (Map&lt;?, ?&gt;) parameter);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Error getting generated key or setting result to parameter object. Cause: "</span> + e, e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;4&gt; 关闭 ResultSet 对象</span></span><br><span class="line">        <span class="keyword">if</span> (rs != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                rs.close();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                <span class="comment">// ignore</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>执行结果</p>
-<p>父类静态变量，静态代码块</p>
-<p>子类静态变量 ，静态代码块</p>
-<p>父类 成员变量，父类构造代码块。父类构造函数</p>
-<p>子类成员变量。子类构造代码块，子类函数</p>
+<p>总结： 一个接口，三个实现类</p>
+<p>是基于数据库的主键返回来做的主键返回。讲主键返回，封装到对应的参数。</p>
 
       
 
@@ -240,7 +215,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">类加载顺序</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">主键返回</a>
         		</li>
       		
 		</ul>
@@ -296,7 +271,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/06/类的初始化顺序/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/14/mybatis源码解析系列-主键生成/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -310,18 +285,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/07/06/mybatis源码解析系列-2/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          mybatis源码解析系列-2
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/07/06/mybatis源码解析系列-1/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">mybatis源码解析系列-1</div>
+    <a href="/2019/07/14/spring源码解析系列-bean标签解析/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">spring源码解析系列-bean标签解析</div>
       <i class="icon-circle-right"></i>
     </a>
   
