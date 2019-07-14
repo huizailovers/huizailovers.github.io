@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019 | 张春辉个人博客</title>
+  <title>spring源码解析系列-循环依赖问题解决 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="张春辉个人博客">
-<meta property="og:url" content="http://yoursite.com/archives/2019/page/2/index.html">
+  <meta name="description" content="什么是循环依赖1.A 类中有属性B类 。B类中有属性A类 实例化类的流程 构建方法反射进行对象的实例化  给实例化的对象赋值，初始值。  对象的初始化（执行初始化方法）   循环依赖发生的位置1.A对象实例化    再1和2之间需要做一个处理：会将刚创建的bean通过ObjectFactory进行暴露，并且将ObjectFactory放入三级缓存2.A对象属性填充  A对象给B对象属性进行赋值，需">
+<meta name="keywords" content="二，三级缓存解决循环依赖">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring源码解析系列-循环依赖问题解决">
+<meta property="og:url" content="http://yoursite.com/2019/07/14/spring源码解析系列-循环依赖问题解决/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
+<meta property="og:description" content="什么是循环依赖1.A 类中有属性B类 。B类中有属性A类 实例化类的流程 构建方法反射进行对象的实例化  给实例化的对象赋值，初始值。  对象的初始化（执行初始化方法）   循环依赖发生的位置1.A对象实例化    再1和2之间需要做一个处理：会将刚创建的bean通过ObjectFactory进行暴露，并且将ObjectFactory放入三级缓存2.A对象属性填充  A对象给B对象属性进行赋值，需">
 <meta property="og:locale" content="golang，java">
+<meta property="og:updated_time" content="2019-07-14T06:53:21.123Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="张春辉个人博客">
+<meta name="twitter:title" content="spring源码解析系列-循环依赖问题解决">
+<meta name="twitter:description" content="什么是循环依赖1.A 类中有属性B类 。B类中有属性A类 实例化类的流程 构建方法反射进行对象的实例化  给实例化的对象赋值，初始值。  对象的初始化（执行初始化方法）   循环依赖发生的位置1.A对象实例化    再1和2之间需要做一个处理：会将刚创建的bean通过ObjectFactory进行暴露，并且将ObjectFactory放入三级缓存2.A对象属性填充  A对象给B对象属性进行赋值，需">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -150,329 +155,193 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-spring源码解析系列-循环依赖问题解决" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      spring源码解析系列-循环依赖问题解决
+    </h1>
+  
+
+        
+        <a href="/2019/07/14/spring源码解析系列-循环依赖问题解决/" class="archive-article-date">
+  	<time datetime="2019-07-14T05:33:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-14</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="什么是循环依赖"><a href="#什么是循环依赖" class="headerlink" title="什么是循环依赖"></a>什么是循环依赖</h3><p>1.A 类中有属性B类 。B类中有属性A类</p>
+<h3 id="实例化类的流程"><a href="#实例化类的流程" class="headerlink" title="实例化类的流程"></a>实例化类的流程</h3><ol>
+<li><p>构建方法反射进行对象的实例化</p>
+</li>
+<li><p>给实例化的对象赋值，初始值。</p>
+</li>
+<li><p>对象的初始化（执行初始化方法）</p>
+</li>
+</ol>
+<h3 id="循环依赖发生的位置"><a href="#循环依赖发生的位置" class="headerlink" title="循环依赖发生的位置"></a>循环依赖发生的位置</h3><p>1.A对象实例化<br>    再1和2之间需要做一个处理：会将刚创建的bean通过ObjectFactory进行暴露，并且将ObjectFactory放入三级缓存<br>2.A对象属性填充<br>  A对象给B对象属性进行赋值，需要获取B对象的值getBean()<br>    B对象实例化<br>    B对象属性填充<br>        B对象给A对象属性进行赋值，需要获取A对象的值getBean()<br>        直接从缓存中取出对应A对象    </p>
+<ol start="3">
+<li><p>B对象初始化</p>
+</li>
+<li><p>A对象初始化</p>
+</li>
+</ol>
+<p>注：<br>引用是可以传递的，提前暴露的bean和完全初始化成功的bean，其实是一个对象。</p>
+<p>getBean流程<br>    先去缓存中获取对应的bean<br>        先去一级缓存查找——-value：完全初始化完毕的Bean实例<br>        没有再去二级缓存查找—value：只完成bean实例化的bean的实例<br>        没有再去三级缓存查找—value：ObjectFactory，通过该缓存将只完成bean实例化的bean的实例提前暴露（不只是将bean的引用放入缓存中，还需要对该未初始化完成的bean进行一些BeanPostProcessor处理）<br>    如果bean没有再进行创建<br>    将创建之后的bean放入缓存中 </p>
+<p>疑问1：为什么要有三个缓存？主要是通过二级和三级缓存来解决循环依赖的问题。其中二级缓存和三级缓存是互斥的。<br>疑问2：三级缓存和二级缓存的区别？<br>    二级缓存只需要存储beanName和提前暴露的bean的实例的映射关系即可。<br>    三级缓存不仅需要对提前暴露的bean进行返回，还要对该bean做BeanPostProcessor后置处理。<br>    三级缓存将暴露的bean处理完之后，将暴露的bean转移到二级缓存，同时删除三级缓存的数据。<br>    三级缓存才是解决循环依赖的根本。</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/07/06/类的初始化顺序/" class="archive-article-date">
-  	<time datetime="2019-07-06T06:25:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/07/06/类的初始化顺序/">类的初始化顺序</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">类加载顺序</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">二，三级缓存解决循环依赖</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/07/14/spring源码解析系列-循环依赖问题解决/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/07/06/mybatis源码解析系列-1/" class="archive-article-date">
-  	<time datetime="2019-07-06T03:51:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
-</a>
+<nav id="article-nav">
+  
+    <a href="/2019/07/14/spring源码解析系列-bean标签解析/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          spring源码解析系列-bean标签解析
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/07/14/spring源码解析系列-bean创建流程/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">spring源码解析系列-bean创建流程</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/07/06/mybatis源码解析系列-1/">mybatis源码解析系列-1</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">加载全局配置文件，加载映射文件。</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/07/01/java异常处理机制/" class="archive-article-date">
-  	<time datetime="2019-07-01T05:02:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/07/01/java异常处理机制/">java异常处理机制</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">jvm 是如何来处理异常的</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/03/golang显式类型转换和断言/" class="archive-article-date">
-  	<time datetime="2019-06-03T13:04:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/03/golang显式类型转换和断言/">golang显式类型转换和断言</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">显示类型转换，int和string类型之间转换，断言</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/03/slice切片/" class="archive-article-date">
-  	<time datetime="2019-06-02T16:05:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/03/slice切片/">slice切片</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">slice切片那些事</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/02/servlet源码解析/" class="archive-article-date">
-  	<time datetime="2019-06-02T13:13:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/02/servlet源码解析/">servlet源码解析</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">servelt的生命周期以及源码解析</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/02/java类加载-链接-初始化/" class="archive-article-date">
-  	<time datetime="2019-06-02T06:50:25.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/02/java类加载-链接-初始化/">java类加载,链接,初始化</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">java类加载那些事</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/06/02/测试文章/" class="archive-article-date">
-  	<time datetime="2019-06-02T04:18:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-02</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/06/02/测试文章/">测试文章</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">测试数据</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
-    <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/archives/2019/">&laquo; Prev</a><a class="page-number" href="/archives/2019/">1</a><span class="page-number current">2</span>
-    </nav>
   
 
 
@@ -496,8 +365,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
