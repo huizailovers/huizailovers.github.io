@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="程序入口 AbstarctBeanFactory#getBean(String name)12345@Override	public Object getBean(String name) throws BeansException &amp;#123;		// 获取Bean的实例		return doGetBean(name, null, null, false);	&amp;#125;  doGetBean(">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-14T04:27:55.944Z">
+<meta property="og:updated_time" content="2019-07-14T14:46:33.213Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="spring源码解析系列-缓存中获取bean">
 <meta name="twitter:description" content="程序入口 AbstarctBeanFactory#getBean(String name)12345@Override	public Object getBean(String name) throws BeansException &amp;#123;		// 获取Bean的实例		return doGetBean(name, null, null, false);	&amp;#125;  doGetBean(">
@@ -185,6 +185,12 @@
 <h3 id="AbstarctBeanFactory-getObjectForBeanInstance（）"><a href="#AbstarctBeanFactory-getObjectForBeanInstance（）" class="headerlink" title="AbstarctBeanFactory #getObjectForBeanInstance（）"></a>AbstarctBeanFactory #getObjectForBeanInstance（）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//从缓存中获取的bean判断是不是factoryBean</span></span><br><span class="line"><span class="function">rotected Object <span class="title">getObjectForBeanInstance</span><span class="params">(Object beanInstance, String name, String beanName,</span></span></span><br><span class="line"><span class="function"><span class="params">			@Nullable RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Don't let calling code try to dereference the factory if the bean isn't a</span></span><br><span class="line">		<span class="comment">// factory.</span></span><br><span class="line">		<span class="keyword">if</span> (BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (beanInstance <span class="keyword">instanceof</span> NullBean) &#123;</span><br><span class="line">				<span class="keyword">return</span> beanInstance;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean)) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanIsNotAFactoryException(transformedBeanName(name), beanInstance.getClass());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Now we have the bean instance, which may be a normal bean or a FactoryBean.</span></span><br><span class="line">		<span class="comment">// If it's a FactoryBean, we use it to create a bean instance, unless the</span></span><br><span class="line">		<span class="comment">// caller actually wants a reference to the factory.</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">// 如果bean实例是一个普通bean或者是一个解引用的FactoryBean的时候，直接返回bean实例。</span></span><br><span class="line">		<span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">			<span class="keyword">return</span> beanInstance;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 否则准备从FactoryBean中产生一个bean实例。</span></span><br><span class="line">		Object object = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">if</span> (mbd == <span class="keyword">null</span>) &#123;</span><br><span class="line">			object = getCachedObjectForFactoryBean(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (object == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// Return bean instance from factory.</span></span><br><span class="line">			FactoryBean&lt;?&gt; factory = (FactoryBean&lt;?&gt;) beanInstance;</span><br><span class="line">			<span class="comment">// Caches object obtained from FactoryBean if it is a singleton.</span></span><br><span class="line">			<span class="keyword">if</span> (mbd == <span class="keyword">null</span> &amp;&amp; containsBeanDefinition(beanName)) &#123;</span><br><span class="line">				mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">boolean</span> synthetic = (mbd != <span class="keyword">null</span> &amp;&amp; mbd.isSynthetic());</span><br><span class="line">			object = getObjectFromFactoryBean(factory, beanName, !synthetic);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> object;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
 
 <h3 id="isSingletonCurrentlyInCreation"><a href="#isSingletonCurrentlyInCreation" class="headerlink" title="isSingletonCurrentlyInCreation()"></a>isSingletonCurrentlyInCreation()</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;String&gt; singletonsCurrentlyInCreation =</span><br><span class="line">			Collections.newSetFromMap(<span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">16</span>));</span><br><span class="line"><span class="comment">//通过一个集合来判断bean的创建状态</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSingletonCurrentlyInCreation</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.singletonsCurrentlyInCreation.contains(beanName);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="comment">//beforeSingletonCreation 创建实例前，往集合中添加元素</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">beforeSingletonCreation</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.inCreationCheckExclusions.contains(beanName) &amp;&amp; !<span class="keyword">this</span>.singletonsCurrentlyInCreation.add(beanName)) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> BeanCurrentlyInCreationException(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//afterSingletonCreation  创建实例后，从集合中移除掉元素</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">afterSingletonCreation</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.inCreationCheckExclusions.contains(beanName) &amp;&amp; !<span class="keyword">this</span>.singletonsCurrentlyInCreation.remove(beanName)) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Singleton '"</span> + beanName + <span class="string">"' isn't currently in creation"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="factoryBean"><a href="#factoryBean" class="headerlink" title="factoryBean"></a>factoryBean</h3><p>作用：</p>
+<p><strong>一般情况下，Spring通过反射机制利用<bean>的class属性指定实现类实例化Bean，在某些情况下，实例化Bean过程比较复杂，如果按照传统的方式，则需要在<bean>中提供大量的配置信息。配置方式的灵活性是受限的，这时采用编码的方式可能会得到一个简单的方案。Spring为此提供了一个org.springframework.bean.factory.FactoryBean的工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑。FactoryBean接口对于Spring框架来说占用重要的地位，Spring自身就提供了70多个FactoryBean的实现</bean></bean></strong>。 </p>
+<p>实现：</p>
+<p>我们手写一个类 实现对应的FactoryBean 接口，获取的bean </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">rotected Object <span class="title">getObjectForBeanInstance</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">        Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// &lt;1&gt; 若为工厂类引用（name 以 &amp; 开头）</span></span><br><span class="line">    <span class="comment">// Don't let calling code try to dereference the factory if the bean isn't a factory.</span></span><br><span class="line">    <span class="keyword">if</span> (BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">        <span class="comment">// 如果是 NullBean，则直接返回</span></span><br><span class="line">        <span class="keyword">if</span> (beanInstance <span class="keyword">instanceof</span> NullBean) &#123;</span><br><span class="line">            <span class="keyword">return</span> beanInstance;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果 beanInstance 不是 FactoryBean 类型，则抛出异常</span></span><br><span class="line">        <span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> BeanIsNotAFactoryException(transformedBeanName(name), beanInstance.getClass());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 到这里我们就有了一个 Bean 实例，当然该实例可能是会是是一个正常的 bean 又或者是一个 FactoryBean</span></span><br><span class="line">    <span class="comment">// 如果是 FactoryBean，我我们则创建该 Bean</span></span><br><span class="line">    <span class="keyword">if</span> (!(beanInstance <span class="keyword">instanceof</span> FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) &#123;</span><br><span class="line">        <span class="keyword">return</span> beanInstance;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Object object = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// &lt;3&gt; 若 BeanDefinition 为 null，则从缓存中加载 Bean 对象</span></span><br><span class="line">    <span class="keyword">if</span> (mbd == <span class="keyword">null</span>) &#123;</span><br><span class="line">        object = getCachedObjectForFactoryBean(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 若 object 依然为空，则可以确认，beanInstance 一定是 FactoryBean 。从而，使用 FactoryBean 获得 Bean 对象</span></span><br><span class="line">    <span class="keyword">if</span> (object == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// Return bean instance from factory.</span></span><br><span class="line">        FactoryBean&lt;?&gt; factory = (FactoryBean&lt;?&gt;) beanInstance;</span><br><span class="line">        <span class="comment">// containsBeanDefinition 检测 beanDefinitionMap 中也就是在所有已经加载的类中</span></span><br><span class="line">        <span class="comment">// 检测是否定义 beanName</span></span><br><span class="line">        <span class="comment">// Caches object obtained from FactoryBean if it is a singleton.</span></span><br><span class="line">        <span class="keyword">if</span> (mbd == <span class="keyword">null</span> &amp;&amp; containsBeanDefinition(beanName)) &#123;</span><br><span class="line">            <span class="comment">// 将存储 XML 配置文件的 GenericBeanDefinition 转换为 RootBeanDefinition，</span></span><br><span class="line">            <span class="comment">// 如果指定 BeanName 是子 Bean 的话同时会合并父类的相关属性</span></span><br><span class="line">            mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 是否是用户定义的，而不是应用程序本身定义的</span></span><br><span class="line">        <span class="keyword">boolean</span> synthetic = (mbd != <span class="keyword">null</span> &amp;&amp; mbd.isSynthetic());</span><br><span class="line">        <span class="comment">// 核心处理方法，使用 FactoryBean 获得 Bean 对象</span></span><br><span class="line">        object = getObjectFromFactoryBean(factory, beanName, !synthetic);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> object;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
       
@@ -431,7 +437,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -439,15 +445,31 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -459,11 +481,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -471,11 +489,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -483,7 +501,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -495,7 +513,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
