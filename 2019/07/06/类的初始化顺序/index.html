@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="类的初始化java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。 类的初始化时机 1.new 对象  调用静态方法 或者访问静态变量    子类的初始化触发父类的初始化    反射生成对象    虚拟机启动，初始化主类    对象的初始化编译器为每一个类生成一个初始化实例的方法()">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-07T05:19:02.992Z">
+<meta property="og:updated_time" content="2019-07-30T13:48:56.976Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="类的初始化顺序">
 <meta name="twitter:description" content="类的初始化java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。 类的初始化时机 1.new 对象  调用静态方法 或者访问静态变量    子类的初始化触发父类的初始化    反射生成对象    虚拟机启动，初始化主类    对象的初始化编译器为每一个类生成一个初始化实例的方法()">
@@ -195,7 +195,7 @@
 </ol>
 </li>
 </ul>
-<h3 id="对象的初始化"><a href="#对象的初始化" class="headerlink" title="对象的初始化"></a>对象的初始化</h3><p>编译器为每一个类生成一个初始化实例的方法<init>()<br> 方法中主要内容 ：<br>     调用父类的<init>()<br>     初始化成员变量<br>     执行构造方法内的字节码</init></init></p>
+<h3 id="对象的初始化"><a href="#对象的初始化" class="headerlink" title="对象的初始化"></a>对象的初始化</h3><p>编译器为每一个类生成一个初始化实例的方法<init>()<br> 方法中主要内容 ：<br>     调用父类的<init>()<br>     初始化成员变量，执行构造代码块中代码<br>     执行构造方法内的字节码</init></init></p>
 <h3 id="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"><a href="#静态变量，成员变量，静态代码块，代码块。构造函数执行过程" class="headerlink" title="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"></a>静态变量，成员变量，静态代码块，代码块。构造函数执行过程</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> String p_staticFieldString = <span class="string">"父类静态变量"</span>;</span><br><span class="line">	<span class="keyword">public</span> String p_filedString = <span class="string">"父类成员变量"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		System.out.println(p_staticFieldString);</span><br><span class="line">	&#125;</span><br><span class="line">	&#123;</span><br><span class="line">		System.out.println(p_filedString);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Parent</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"构造方法初始化"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//执行结果 </span></span><br><span class="line">父类静态变量</span><br><span class="line">父类成员变量</span><br><span class="line">构造方法初始化</span><br></pre></td></tr></table></figure>
 
 <p>子类代码静态变量，成员变量。构造函数</p>
@@ -447,10 +447,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
@@ -459,15 +455,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -475,7 +471,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -483,7 +479,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -491,7 +495,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -507,15 +511,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -527,7 +531,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -535,19 +543,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -555,7 +551,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -563,7 +567,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -572,10 +584,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">

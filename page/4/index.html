@@ -152,6 +152,450 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-mybatis源码解析系列-2" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/06/mybatis源码解析系列-2/">mybatis源码解析系列-2</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/06/mybatis源码解析系列-2/" class="archive-article-date">
+  	<time datetime="2019-07-06T08:10:22.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="流程分析"><a href="#流程分析" class="headerlink" title="流程分析"></a>流程分析</h3><p>|–XMLLanguageDriver#createSqlSource：创建SqlSource </p>
+<p>​    |–XMLScriptBuilder#parseScriptNode() 解析sql 返回sqlSource</p>
+<p>​        |– RawSqlSource#parse（） 解析静态sql</p>
+<p>​            |– GenericTokenParser#构造方法（）创建分词器</p>
+<p>​                |StaticSqlSource#构造方法（）生成StaticSqlSource（）</p>
+<h3 id="具体代码"><a href="#具体代码" class="headerlink" title="具体代码"></a>具体代码</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> SqlSource <span class="title">createSqlSource</span><span class="params">(Configuration configuration, XNode script, Class&lt;?&gt; parameterType)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 初始化了动态SQL标签处理器</span></span><br><span class="line">		XMLScriptBuilder builder = <span class="keyword">new</span> XMLScriptBuilder(configuration, script, parameterType);</span><br><span class="line">		<span class="comment">// 解析动态SQL</span></span><br><span class="line">		<span class="keyword">return</span> builder.parseScriptNode();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> SqlSource <span class="title">parseScriptNode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 解析select\insert\ update\delete标签中的SQL语句，最终将解析到的SqlNode封装到MixedSqlNode中的List集合中</span></span><br><span class="line">		<span class="comment">// ****将带有$&#123;&#125;号的SQL信息封装到TextSqlNode</span></span><br><span class="line">		<span class="comment">// ****将带有#&#123;&#125;号的SQL信息封装到StaticTextSqlNode</span></span><br><span class="line">		<span class="comment">// ****将动态SQL标签中的SQL信息分别封装到不同的SqlNode中</span></span><br><span class="line">		MixedSqlNode rootSqlNode = parseDynamicTags(context);</span><br><span class="line">		SqlSource sqlSource = <span class="keyword">null</span>;</span><br><span class="line">		<span class="comment">// 如果SQL中包含$&#123;&#125;和动态SQL语句，则将SqlNode封装到DynamicSqlSource</span></span><br><span class="line">		<span class="keyword">if</span> (isDynamic) &#123;</span><br><span class="line">			sqlSource = <span class="keyword">new</span> DynamicSqlSource(configuration, rootSqlNode);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 如果SQL中包含#&#123;&#125;，则将SqlNode封装到RawSqlSource中，并指定parameterType</span></span><br><span class="line">			sqlSource = <span class="keyword">new</span> RawSqlSource(configuration, rootSqlNode, parameterType);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> sqlSource;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">RawSqlSource</span><span class="params">(Configuration configuration, String sql, Class&lt;?&gt; parameterType)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 解析SQL语句</span></span><br><span class="line">		SqlSourceBuilder sqlSourceParser = <span class="keyword">new</span> SqlSourceBuilder(configuration);</span><br><span class="line">		<span class="comment">// 获取入参类型</span></span><br><span class="line">		Class&lt;?&gt; clazz = parameterType == <span class="keyword">null</span> ? Object.class : parameterType;</span><br><span class="line">		<span class="comment">// 开始解析</span></span><br><span class="line">		sqlSource = sqlSourceParser.parse(sql, clazz, <span class="keyword">new</span> HashMap&lt;String, Object&gt;());</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">sqlSource 创建流程</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/06/mybatis源码解析系列-2/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-类的初始化顺序" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/06/类的初始化顺序/">类的初始化顺序</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/06/类的初始化顺序/" class="archive-article-date">
+  	<time datetime="2019-07-06T06:25:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="类的初始化"><a href="#类的初始化" class="headerlink" title="类的初始化"></a>类的初始化</h3><p>java虚拟机在编译class文件的时候，会把static静态变量和static 静态代码块中的内容编译到<clinit>方法中。在jvm执行改方法的时候，会通过加锁来保证只会被执行一次。</clinit></p>
+<h3 id="类的初始化时机"><a href="#类的初始化时机" class="headerlink" title="类的初始化时机"></a>类的初始化时机</h3><ul>
+<li>1.new 对象</li>
+<li><ol start="2">
+<li>调用静态方法 或者访问静态变量</li>
+</ol>
+</li>
+<li><ol start="3">
+<li>子类的初始化触发父类的初始化</li>
+</ol>
+</li>
+<li><ol start="4">
+<li>反射生成对象</li>
+</ol>
+</li>
+<li><ol start="5">
+<li>虚拟机启动，初始化主类</li>
+</ol>
+</li>
+</ul>
+<h3 id="对象的初始化"><a href="#对象的初始化" class="headerlink" title="对象的初始化"></a>对象的初始化</h3><p>编译器为每一个类生成一个初始化实例的方法<init>()<br> 方法中主要内容 ：<br>     调用父类的<init>()<br>     初始化成员变量，执行构造代码块中代码<br>     执行构造方法内的字节码</init></init></p>
+<h3 id="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"><a href="#静态变量，成员变量，静态代码块，代码块。构造函数执行过程" class="headerlink" title="静态变量，成员变量，静态代码块，代码块。构造函数执行过程"></a>静态变量，成员变量，静态代码块，代码块。构造函数执行过程</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> String p_staticFieldString = <span class="string">"父类静态变量"</span>;</span><br><span class="line">	<span class="keyword">public</span> String p_filedString = <span class="string">"父类成员变量"</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		System.out.println(p_staticFieldString);</span><br><span class="line">	&#125;</span><br><span class="line">	&#123;</span><br><span class="line">		System.out.println(p_filedString);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Parent</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"构造方法初始化"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//执行结果 </span></span><br><span class="line">父类静态变量</span><br><span class="line">父类成员变量</span><br><span class="line">构造方法初始化</span><br></pre></td></tr></table></figure>
+
+<p>子类代码静态变量，成员变量。构造函数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> <span class="keyword">extends</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> String c_staticFiled = <span class="string">"子类静态变量"</span>;</span><br><span class="line">	<span class="keyword">public</span> String c_filedS = <span class="string">"子类成员变量"</span>;</span><br><span class="line">	<span class="keyword">static</span> &#123;</span><br><span class="line">		System.out.println(c_staticFiled);</span><br><span class="line">	&#125;</span><br><span class="line">	&#123;</span><br><span class="line">		System.out.println(c_filedS);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Student</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"子类构造方法"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果</p>
+<p>父类静态变量，静态代码块</p>
+<p>子类静态变量 ，静态代码块</p>
+<p>父类 成员变量，父类构造代码块。父类构造函数</p>
+<p>子类成员变量。子类构造代码块，子类函数</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">类加载顺序</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/06/类的初始化顺序/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-mybatis源码解析系列-1" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/06/mybatis源码解析系列-1/">mybatis源码解析系列-1</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/06/mybatis源码解析系列-1/" class="archive-article-date">
+  	<time datetime="2019-07-06T03:51:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-06</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="找程序的入口"><a href="#找程序的入口" class="headerlink" title="找程序的入口"></a>找程序的入口</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		String resource = <span class="string">"SqlMapConfig.xml"</span>;</span><br><span class="line">		InputStream is = <span class="keyword">this</span>.getClass().getClassLoader().getResourceAsStream(resource);</span><br><span class="line">		sqlSessionFactory = <span class="keyword">new</span> SqlSessionFactoryBuild().build(is);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="comment">//sqlSessionFacotryBuild().build() 是查询源码的入口</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="流程分析"><a href="#流程分析" class="headerlink" title="流程分析"></a>流程分析</h3><p>SqlSessionFactoryBuilder#build() 加载全局配置文件，SqlSessionFactory 对象。<br>    |–XMLConfigBuilder#parse() 解析配置文件<br>        parseConfiguration（）解析configuration 节点中的标签<br>              environmentsElement（）解析environment标签<br>                dataSourceElement（）根据不同的连接池类型，创建不同的datasource，并将daatsource封装到 configuration对象中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">environmentsElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="keyword">null</span>) &#123;</span><br><span class="line">     </span><br><span class="line">      <span class="keyword">for</span> (XNode child : context.getChildren()) &#123;</span><br><span class="line">        String id = child.getStringAttribute(<span class="string">"id"</span>);</span><br><span class="line">        <span class="keyword">if</span> (isSpecifiedEnvironment(id)) &#123;</span><br><span class="line">          TransactionFactory txFactory = transactionManagerElement(child.evalNode(<span class="string">"transactionManager"</span>));</span><br><span class="line">          DataSourceFactory dsFactory = dataSourceElement(child.evalNode(<span class="string">"dataSource"</span>));</span><br><span class="line">          DataSource dataSource = dsFactory.getDataSource();</span><br><span class="line">          <span class="comment">//将dataSource封装到enviroment 对象。通过构建者模式.</span></span><br><span class="line">          Environment.Builder environmentBuilder = <span class="keyword">new</span> Environment.Builder(id)</span><br><span class="line">              .transactionFactory(txFactory)</span><br><span class="line">              .dataSource(dataSource);</span><br><span class="line">          configuration.setEnvironment(environmentBuilder.build());</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="加载映射配置文件"><a href="#加载映射配置文件" class="headerlink" title="加载映射配置文件"></a>加载映射配置文件</h3><p>入口 XMLConfigBuilder#mapperElement()<br>    XMLMapperBuilder() 构造方法将文件读取的二进制流，configuration 加载到成员<br>        parse()<br>    XMLMapperBuild#configurationElement 解析mapper标签<br>        buildStatementFromContext（） 解析<select><insert><delete> 标签等<br>             |– XmlStateMentBuild#parseStatementNode（）生成mappedStatement对象<br>            mapperstatemend#build()生成mapperstatment 对象<br>            configuration.addMappedStatement(statement);//将mappeedStatement对象添加到configuration</delete></insert></select></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseStatementNode</span><span class="params">()</span> </span>&#123;</span><br><span class="line"><span class="comment">// 获取statement的id属性（特别关键的值）</span></span><br><span class="line">   String id = context.getStringAttribute(<span class="string">"id"</span>);</span><br><span class="line">   String databaseId = context.getStringAttribute(<span class="string">"databaseId"</span>);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (!databaseIdMatchesCurrent(id, databaseId, <span class="keyword">this</span>.requiredDatabaseId)) &#123;</span><br><span class="line">     <span class="keyword">return</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   Integer fetchSize = context.getIntAttribute(<span class="string">"fetchSize"</span>);</span><br><span class="line">   Integer timeout = context.getIntAttribute(<span class="string">"timeout"</span>);</span><br><span class="line">   String parameterMap = context.getStringAttribute(<span class="string">"parameterMap"</span>);</span><br><span class="line">   <span class="comment">// 获取入参类型</span></span><br><span class="line">   String parameterType = context.getStringAttribute(<span class="string">"parameterType"</span>);</span><br><span class="line">   <span class="comment">// 别名处理，获取入参对应的Java类型</span></span><br><span class="line">   Class&lt;?&gt; parameterTypeClass = resolveClass(parameterType);</span><br><span class="line">   <span class="comment">// 获取ResultMap</span></span><br><span class="line">   String resultMap = context.getStringAttribute(<span class="string">"resultMap"</span>);</span><br><span class="line">   <span class="comment">// 获取结果映射类型</span></span><br><span class="line">   String resultType = context.getStringAttribute(<span class="string">"resultType"</span>);</span><br><span class="line">   String lang = context.getStringAttribute(<span class="string">"lang"</span>);</span><br><span class="line">   LanguageDriver langDriver = getLanguageDriver(lang);</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// 别名处理，获取返回值对应的Java类型</span></span><br><span class="line">   Class&lt;?&gt; resultTypeClass = resolveClass(resultType);</span><br><span class="line">   String resultSetType = context.getStringAttribute(<span class="string">"resultSetType"</span>);</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// 设置默认StatementType为Prepared，该参数指定了后面的JDBC处理时，采用哪种Statement</span></span><br><span class="line">   StatementType statementType = StatementType.valueOf(context.getStringAttribute(<span class="string">"statementType"</span>, StatementType.PREPARED.toString()));</span><br><span class="line">   ResultSetType resultSetTypeEnum = resolveResultSetType(resultSetType);</span><br><span class="line"></span><br><span class="line">   String nodeName = context.getNode().getNodeName();</span><br><span class="line">   <span class="comment">// 解析SQL命令类型是什么？确定操作是CRUD中的哪一种</span></span><br><span class="line">   SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));</span><br><span class="line">   <span class="comment">//是否查询语句</span></span><br><span class="line">   <span class="keyword">boolean</span> isSelect = sqlCommandType == SqlCommandType.SELECT;</span><br><span class="line">   <span class="keyword">boolean</span> flushCache = context.getBooleanAttribute(<span class="string">"flushCache"</span>, !isSelect);</span><br><span class="line">   <span class="keyword">boolean</span> useCache = context.getBooleanAttribute(<span class="string">"useCache"</span>, isSelect);</span><br><span class="line">   <span class="keyword">boolean</span> resultOrdered = context.getBooleanAttribute(<span class="string">"resultOrdered"</span>, <span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Include Fragments before parsing</span></span><br><span class="line">   <span class="comment">// &lt;include&gt;标签解析</span></span><br><span class="line">   XMLIncludeTransformer includeParser = <span class="keyword">new</span> XMLIncludeTransformer(configuration, builderAssistant);</span><br><span class="line">   includeParser.applyIncludes(context.getNode());</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Parse selectKey after includes and remove them.</span></span><br><span class="line">   <span class="comment">// 解析&lt;selectKey&gt;标签</span></span><br><span class="line">   processSelectKeyNodes(id, parameterTypeClass, langDriver);</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// Parse the SQL (pre: &lt;selectKey&gt; and &lt;include&gt; were parsed and removed)</span></span><br><span class="line">   <span class="comment">// 创建SqlSource，解析SQL，封装SQL语句（未参数绑定）和入参信息</span></span><br><span class="line">   SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);</span><br><span class="line">  </span><br><span class="line">   String resultSets = context.getStringAttribute(<span class="string">"resultSets"</span>);</span><br><span class="line">   String keyProperty = context.getStringAttribute(<span class="string">"keyProperty"</span>);</span><br><span class="line">   String keyColumn = context.getStringAttribute(<span class="string">"keyColumn"</span>);</span><br><span class="line">   KeyGenerator keyGenerator;</span><br><span class="line">   String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;</span><br><span class="line">   keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, <span class="keyword">true</span>);</span><br><span class="line">   <span class="keyword">if</span> (configuration.hasKeyGenerator(keyStatementId)) &#123;</span><br><span class="line">     keyGenerator = configuration.getKeyGenerator(keyStatementId);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     keyGenerator = context.getBooleanAttribute(<span class="string">"useGeneratedKeys"</span>,</span><br><span class="line">         configuration.isUseGeneratedKeys() &amp;&amp; SqlCommandType.INSERT.equals(sqlCommandType))</span><br><span class="line">         ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// 通过构建者助手，创建MappedStatement对象</span></span><br><span class="line">   builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,</span><br><span class="line">       fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,</span><br><span class="line">       resultSetTypeEnum, flushCache, useCache, resultOrdered, </span><br><span class="line">       keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>   解析sql语句 将#{} 用？ 占位符，并且将#{} 存放到list集合中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> SqlSource <span class="title">parse</span><span class="params">(String originalSql, Class&lt;?&gt; parameterType, Map&lt;String, Object&gt; additionalParameters)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		ParameterMappingTokenHandler handler = <span class="keyword">new</span> ParameterMappingTokenHandler(configuration, parameterType,</span><br><span class="line"></span><br><span class="line">				additionalParameters);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 创建分词解析器</span></span><br><span class="line"></span><br><span class="line">		GenericTokenParser parser = <span class="keyword">new</span> GenericTokenParser(<span class="string">"#&#123;"</span>, <span class="string">"&#125;"</span>, handler);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 解析#&#123;&#125;</span></span><br><span class="line"></span><br><span class="line">		String sql = parser.parse(originalSql);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 将解析之后的SQL信息，封装到StaticSqlSource对象中</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">// SQL字符串是带有?号的字符串，?相关的参数信息，封装到ParameterMapping集合中</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> StaticSqlSource(configuration, sql, handler.getParameterMappings());</span><br><span class="line"></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>上述所有的过程就是将sqlMapConfig.xml 配置文件和xxxMapper.xml 的映射文件全部解析加载到configuration对象</p>
+<p>​    configuration</p>
+<p>​        |–dataSource 数据库的数据源</p>
+<p>​        |–map&lt;key,value&gt; 可以是 nameSpace+ id，value是MappedStatament对象</p>
+<p>​        mappedStatement 对象</p>
+<p>​        |–sqlSource  sql语句和 占位符的封装</p>
+<p>​            |–sqlText  解析后的sql语句 带有？占位符</p>
+<p>​            l|–ist<mappingprarams> list中存放#{} 占位符中的内容</mappingprarams></p>
+<p>​        |–parameTypeClass 请求参数的class</p>
+<p>​        |–resultTypeClass 返回参数的class</p>
+<p>​        |–statementType （包含prepareStatement等信息）</p>
+<p>​    </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">加载全局配置文件，加载映射文件。</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/06/mybatis源码解析系列-1/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-java异常处理机制" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/01/java异常处理机制/">java异常处理机制</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/01/java异常处理机制/" class="archive-article-date">
+  	<time datetime="2019-07-01T05:02:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="异常处理的显示抛出异常和隐式抛出异常"><a href="#异常处理的显示抛出异常和隐式抛出异常" class="headerlink" title="异常处理的显示抛出异常和隐式抛出异常"></a>异常处理的显示抛出异常和隐式抛出异常</h3><p>显式：throw 关键字 手动将异常的实例抛出</p>
+<p>隐式：java虚拟机在执行的过程中，碰到无法执行的代码。自动抛出异常。</p>
+<h3 id="捕获异常的三种代码块"><a href="#捕获异常的三种代码块" class="headerlink" title="捕获异常的三种代码块"></a>捕获异常的三种代码块</h3><p>try — 标记需要进行异常监控的代码</p>
+<p>catch– try中触发了某种类型的异常。catch中定义了处理对应类型的异常处理器。java虚拟机会从上到下匹配异常处理器。</p>
+<p>finally – 一段必定会运行的代码。清理某些资源等</p>
+<h3 id="检查的异常和非检查的异常"><a href="#检查的异常和非检查的异常" class="headerlink" title="检查的异常和非检查的异常"></a>检查的异常和非检查的异常</h3><p>runtimeException 和 error属于非检查的异常。其他异常都是检查的异常。所有的检查的异常都需要try–catch 或者throws。以便于java编译器的编译时检查</p>
+<h3 id="java虚拟机如何捕获异常的"><a href="#java虚拟机如何捕获异常的" class="headerlink" title="java虚拟机如何捕获异常的?"></a>java虚拟机如何捕获异常的?</h3><p>编译生成的字节码中，每个方法都附带一个异常表，表中的每个条目都代表一个异常处理器。标记着 from，to,target 指针。以及所捕获的异常类型。from-to 代码的监控的访问。当异常触发的时候，jvm 会从上到下遍历异常 表。找到对应字节码所在的索引范围。如果异常类型一致。则处理异常。catch住。不一致。弹出当前方法的调用栈信息。</p>
+<h3 id="finally-代码块的编译"><a href="#finally-代码块的编译" class="headerlink" title="finally 代码块的编译"></a>finally 代码块的编译</h3><p>jvm编译器的做法，赋值finally中的代码内容。分别放到try -catch 代码块索引正常执行路径。以及异常执行路径的出口中。同时java编译器会生成一个异常条目。监控整个try –catch 代码，将捕获到的异常的target指针指向另一份复制的finally代码块。在finally代码块最后，java虚拟机会重新抛出异常。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">jvm 是如何来处理异常的</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/01/java异常处理机制/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-golang显式类型转换和断言" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/03/golang显式类型转换和断言/">golang显式类型转换和断言</a>
+    </h1>
+  
+
+        
+        <a href="/2019/06/03/golang显式类型转换和断言/" class="archive-article-date">
+  	<time datetime="2019-06-03T13:04:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-03</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="显示类型转换"><a href="#显示类型转换" class="headerlink" title="显示类型转换"></a>显示类型转换</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// T(v) 显示转换</span></span><br><span class="line"><span class="keyword">var</span> i <span class="keyword">int32</span> = <span class="number">100</span></span><br><span class="line"><span class="keyword">var</span> n1 <span class="keyword">int8</span> =  <span class="keyword">int8</span> (i)</span><br><span class="line"><span class="keyword">var</span> n2 <span class="keyword">int32</span> = <span class="keyword">int32</span>(i) <span class="comment">//从低精度转成高精度</span></span><br><span class="line"><span class="keyword">var</span> n3 <span class="keyword">int64</span> = <span class="keyword">int64</span>(<span class="number">32</span>) <span class="comment">//从高精度转成低精度会按照溢出处理</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="类型断言"><a href="#类型断言" class="headerlink" title="类型断言"></a>类型断言</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//类型断言是对接口类型进行断言，所有类型都实现了空接口，通过断言，得到真实类型</span></span><br><span class="line"><span class="comment">// 安全类型断言</span></span><br><span class="line">&lt;目标类型的值&gt;，&lt;布尔参数&gt; := &lt;表达式&gt;.( 目标类型 )  </span><br><span class="line"></span><br><span class="line"><span class="comment">//非安全类型断言</span></span><br><span class="line">&lt;目标类型的值&gt; := &lt;表达式&gt;.( 目标类型 )</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> i <span class="keyword">interface</span>&#123;&#125; = <span class="built_in">new</span>(Student)</span><br><span class="line">    s, ok := i.(Student) <span class="comment">//必须使用ok，否则会panic </span></span><br><span class="line">    <span class="keyword">if</span> ok &#123;</span><br><span class="line">        fmt.Println(s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="空接口的最佳实践"><a href="#空接口的最佳实践" class="headerlink" title="空接口的最佳实践"></a>空接口的最佳实践</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义一个函数，该函数判断传递进来的参数是什么类型</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeJudge</span><span class="params">(<span class="keyword">type</span> <span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> v := v.(<span class="keyword">type</span>) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">bool</span>:</span><br><span class="line">        	fmt.Println(<span class="string">"bool 类型"</span>)</span><br><span class="line">        <span class="keyword">case</span> <span class="keyword">float32</span>：</span><br><span class="line">        	fmt.<span class="built_in">println</span>(<span class="string">"float32 类型"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">显示类型转换，int和string类型之间转换，断言</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/06/03/golang显式类型转换和断言/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-slice切片" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -634,10 +1078,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
@@ -646,15 +1086,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -662,7 +1102,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -670,7 +1110,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -678,7 +1126,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -694,15 +1142,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -714,7 +1162,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -722,19 +1174,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -742,7 +1182,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -750,7 +1198,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -759,10 +1215,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
