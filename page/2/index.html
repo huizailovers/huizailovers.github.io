@@ -152,6 +152,251 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-mysql深入解析-事务，mvcc" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/03/mysql深入解析-事务，mvcc/">mysql深入解析-事务，mvcc</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/03/mysql深入解析-事务，mvcc/" class="archive-article-date">
+  	<time datetime="2019-08-03T02:46:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-03</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="redolog"><a href="#redolog" class="headerlink" title="redolog"></a>redolog</h3><ul>
+<li><p>循环写的物理日志，作用是 mysql宕机的时候，来恢复数据使用。恢复的时候，不仅需要恢复提交的事务，还需要恢复没提交的</p>
+<h3 id="redologbuffer"><a href="#redologbuffer" class="headerlink" title="redologbuffer"></a>redologbuffer</h3></li>
+<li><p>记录的是 数据页 回滚页，undolog页（记录的是上一次的历史版本）。 统称为脏页</p>
+</li>
+<li><p>rollback的时候 ，通过redologbuffer中的undolog数据来回滚数据</p>
+</li>
+<li><p>数据库宕机，但是 没有commit的时候， 通过 redolog找到对应未提交的事务，然后去undolog中回滚数据。</p>
+</li>
+</ul>
+<h3 id="undolog"><a href="#undolog" class="headerlink" title="undolog"></a>undolog</h3><ul>
+<li>崩溃事务回滚操作，mvcc 多版本并发控制。</li>
+</ul>
+<h3 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h3><ul>
+<li>redolog ，undolog ，force log at commmit 来实现。 只用在redolog日志落盘后，事务才算commit成功。</li>
+<li>rollback后，可以通过undolog对所有的sql操作进行回滚，commit后，所有的数据都已经保存到硬盘。</li>
+</ul>
+<h3 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a>持久性</h3><ul>
+<li>所有的数据操作都记录到了redolog，保证了数据的持久性</li>
+</ul>
+<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><ul>
+<li>原子性和一致性的统称。</li>
+</ul>
+<h3 id="一致性非锁定读"><a href="#一致性非锁定读" class="headerlink" title="一致性非锁定读"></a>一致性非锁定读</h3><ul>
+<li>在 RR 和 rc 的隔离级别下，select 语句读取数据的时候，遇到update语句等持有写锁的时候，会去读取快照来提高查询的效率。</li>
+</ul>
+<h3 id="mvcc-多版本控制的实现"><a href="#mvcc-多版本控制的实现" class="headerlink" title="mvcc 多版本控制的实现"></a>mvcc 多版本控制的实现</h3><p>根据的是 read view 视图 和 uodolog 来实现的</p>
+<ul>
+<li>前提 ： 隔离级别是 RR 或者 RC </li>
+<li>实现方式  rc 隔离级别下 每次sql语句都开启新的视图， 而 rr 是在事务开启的时候开启视图。 开启视图的时候，会查询当前的活跃的事务。读取的row 数据是活跃之前的历史数据。</li>
+</ul>
+<h3 id="数据回滚："><a href="#数据回滚：" class="headerlink" title="数据回滚："></a>数据回滚：</h3><ul>
+<li>commit 前 宕机<ul>
+<li>redolog 已经落盘  根据redolog中的undolog来恢复buffer pool中的数据</li>
+<li>redolog 没有落盘 根据 表空间中的undolog 来进行落盘。</li>
+</ul>
+</li>
+<li>commit 后宕机，数据已经记录到了redolog中，根据redolog 恢复undolog。然后根据undolog来恢复缓存中的数据。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">事务 mvcc</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/03/mysql深入解析-事务，mvcc/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-mysql系列-锁" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/01/mysql系列-锁/">mysql系列-锁</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/01/mysql系列-锁/" class="archive-article-date">
+  	<time datetime="2019-08-01T04:35:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="表级锁-sql-layer层实现"><a href="#表级锁-sql-layer层实现" class="headerlink" title="表级锁 sql layer层实现"></a>表级锁 sql layer层实现</h3><ul>
+<li>表锁 (平常也不会加表锁)<ul>
+<li>共享读 - 加了读锁后，可以加读锁，不能加写锁<ul>
+<li>session1 加读锁，lock table mylock read;  </li>
+<li>session2 可以读 ，不可改数据 update mylock set name=’x’ where id=2; – 修改阻塞,自动加行写锁 </li>
+<li>sessio1 释放锁  unlock tables;  session2 可以更改</li>
+</ul>
+</li>
+<li>排他写 - 加了写锁以后，不能加读锁，也不能加写锁。<ul>
+<li>session1 加写锁  lock table mylock write;  </li>
+<li>session2 不可以读，也不可以写。select * from mylock; – 查询阻塞 </li>
+<li>session1 释放锁  unlock tables; </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>元数据锁（表结构锁，自动加） – curd的时候不能ddl，ddl的时候不能curd<ul>
+<li>curd 加读锁，不能更改表结构</li>
+<li>ddl 加写锁，不能curd</li>
+</ul>
+</li>
+</ul>
+<h3 id="行级锁"><a href="#行级锁" class="headerlink" title="行级锁"></a>行级锁</h3><p>innoDB 行锁是通过给索引上的索引项加锁实现的，因此只有通过索引条件检索的时候，InnoDB才会使用行锁，否则使用全表锁。 </p>
+<ul>
+<li><p>共享读锁 （手动加）</p>
+<ul>
+<li>需要手动加读锁 select * from mylock where ID =1 lock in share mode; 未锁定行可以修改，锁定行不可以修改</li>
+<li>手动加的行读锁，没有使用索引，会升级为表读锁。</li>
+</ul>
+</li>
+<li><p>排他写锁 （自动加）</p>
+<ul>
+<li><p>update等语句会自动加上行写锁。</p>
+</li>
+<li><p>session1 加上行写锁，session2 select * from mylock where id=1 ; 可以读，因为没有加锁，</p>
+<p>select * from mylock where id =1 lock in share model 加读锁 ，被阻塞。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h3><p>​    两个session互相等待对方的资源释放之后，才能释放自己的资源。</p>
+<p>​    msyql会自动检测mysql的死锁，当发现出现死锁的时候，一个session自动rollback； </p>
+<h3 id="innodb的内存结构"><a href="#innodb的内存结构" class="headerlink" title="innodb的内存结构"></a>innodb的内存结构</h3><ul>
+<li>buffer  pool 缓冲池 。sql语句执行的的时候，比如update等会将信息更新到缓冲池中。由另一个线程从缓冲池中拿数据，然后保存到磁盘上。</li>
+<li>redo log buffer 重做日志缓冲。因为数据在落盘的时候，先存储日志。日志是顺序io，存储效率高。数据是随机io，效率低。在写redolog的时候，先写 redo log buffer。 事务提交commit成功是在redolog 日志写完之后。redolog 是两阶段提交。redolog 处于prepare状态，由执行器写binlog。binlog写完后，通知存储引擎，存储引擎将redolog改为commit状态。更新完成，事务提交成功。（force log at commit）保证redolog完全持久化后，事务才算操作成功。innodb_flflush_log_at_trx_commit  设置为1</li>
+<li>锁信息</li>
+<li>自适应hash索引</li>
+<li>元数据信息</li>
+</ul>
+<h3 id="落盘机制"><a href="#落盘机制" class="headerlink" title="落盘机制"></a>落盘机制</h3><p>将内存（缓存buffer pool）中的数据写入到磁盘上。</p>
+<p>checkpoint 检查点：表示脏页数据写入到磁盘的时机。</p>
+<ol>
+<li>redolog 日志文件满的时候</li>
+<li>buffer pool 缓存不够用的时候。</li>
+</ol>
+<h3 id="mysql的加锁分析"><a href="#mysql的加锁分析" class="headerlink" title="mysql的加锁分析"></a>mysql的加锁分析</h3><p>rc的隔离级别下 主要是针对的更新操作，不是针对插入操作，所以加的是行记录锁</p>
+<p>rr的级别下，主要针对的是插入操作，加的行锁是间隙锁。</p>
+<h3 id="串行化的隔离级别"><a href="#串行化的隔离级别" class="headerlink" title="串行化的隔离级别"></a>串行化的隔离级别</h3><p>经过测试发现：</p>
+<ul>
+<li>该隔离级别下，任何语句都会加锁，select 都会加上行读锁</li>
+<li>当没有用到索引的时候，行锁会上升为表锁。</li>
+</ul>
+<h3 id="一条sql语句的加锁分析"><a href="#一条sql语句的加锁分析" class="headerlink" title="一条sql语句的加锁分析"></a>一条sql语句的加锁分析</h3><ul>
+<li>前提<ul>
+<li>索引类型</li>
+<li>是否有索引</li>
+<li>隔离级别</li>
+</ul>
+</li>
+<li>delete from tuser where name =1 ； 如果 name是非唯一索引，并且在rc的隔离级别下，记录锁，如果是rr的隔离级别下是间隙锁 + 记录锁。innode 的rr隔离级别下，可以防止幻读。因为可以锁缝隙。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/01/mysql系列-锁/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-mysql-深入解析索引" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1000,165 +1245,6 @@
 
 
   
-    <article id="post-mybatis源码解析系列-resultSetHandler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/24/mybatis源码解析系列-resultSetHandler/">mybatis源码解析系列-resultSetHandler</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/24/mybatis源码解析系列-resultSetHandler/" class="archive-article-date">
-  	<time datetime="2019-07-24T05:13:46.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="DefaultResultSetHandler-handleResultSets（）"><a href="#DefaultResultSetHandler-handleResultSets（）" class="headerlink" title="DefaultResultSetHandler#handleResultSets（）"></a>DefaultResultSetHandler#handleResultSets（）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">handleResultSet</span><span class="params">(ResultSetWrapper rsw, ResultMap resultMap, List&lt;Object&gt; multipleResults,</span></span></span><br><span class="line"><span class="function"><span class="params">			ResultMapping parentMapping)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 处理嵌套结果映射</span></span><br><span class="line">			<span class="keyword">if</span> (parentMapping != <span class="keyword">null</span>) &#123;</span><br><span class="line">				handleRowValues(rsw, resultMap, <span class="keyword">null</span>, RowBounds.DEFAULT, parentMapping);</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// 第一次一般来说resultHandler为空，则创建DefaultResultHandler来处理结果</span></span><br><span class="line">				<span class="keyword">if</span> (resultHandler == <span class="keyword">null</span>) &#123;</span><br><span class="line">					DefaultResultHandler defaultResultHandler = <span class="keyword">new</span> DefaultResultHandler(objectFactory);</span><br><span class="line">					<span class="comment">// 处理行数据，其实就是完成结果映射</span></span><br><span class="line">					handleRowValues(rsw, resultMap, defaultResultHandler, rowBounds, <span class="keyword">null</span>);</span><br><span class="line">					</span><br><span class="line">					multipleResults.add(defaultResultHandler.getResultList());</span><br><span class="line">				&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">					handleRowValues(rsw, resultMap, resultHandler, rowBounds, <span class="keyword">null</span>);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="comment">// issue #228 (close resultsets)</span></span><br><span class="line">			closeResultSet(rsw.getResultSet());</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
- <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleRowValues</span><span class="params">(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler&lt;?&gt; resultHandler,</span></span></span><br><span class="line"><span class="function"><span class="params">			RowBounds rowBounds, ResultMapping parentMapping)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		<span class="comment">// 是否有内置嵌套的结果映射</span></span><br><span class="line">		<span class="keyword">if</span> (resultMap.hasNestedResultMaps()) &#123;</span><br><span class="line">			ensureNoRowBounds();</span><br><span class="line">			checkResultHandler();</span><br><span class="line">			<span class="comment">// 嵌套结果映射</span></span><br><span class="line">			handleRowValuesForNestedResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 简单结果映射</span></span><br><span class="line">			handleRowValuesForSimpleResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="简单结果映射"><a href="#简单结果映射" class="headerlink" title="简单结果映射"></a>简单结果映射</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Object <span class="title">getRowValue</span><span class="params">(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		<span class="comment">// 延迟加载的映射信息</span></span><br><span class="line">		<span class="keyword">final</span> ResultLoaderMap lazyLoader = <span class="keyword">new</span> ResultLoaderMap();</span><br><span class="line">		<span class="comment">// 创建要映射的PO类对象</span></span><br><span class="line">		Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);</span><br><span class="line">		<span class="keyword">if</span> (rowValue != <span class="keyword">null</span> &amp;&amp; !hasTypeHandlerForResultObject(rsw, resultMap.getType())) &#123;</span><br><span class="line">			<span class="keyword">final</span> MetaObject metaObject = configuration.newMetaObject(rowValue);</span><br><span class="line">			<span class="keyword">boolean</span> foundValues = <span class="keyword">this</span>.useConstructorMappings;</span><br><span class="line">			<span class="comment">// 是否应用自动映射，也就是通过resultType进行映射</span></span><br><span class="line">			<span class="keyword">if</span> (shouldApplyAutomaticMappings(resultMap, <span class="keyword">false</span>)) &#123;</span><br><span class="line">				<span class="comment">// 根据columnName和type属性名映射赋值</span></span><br><span class="line">				foundValues = applyAutomaticMappings(rsw, resultMap, metaObject, columnPrefix) || foundValues;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 根据我们配置ResultMap的column和property映射赋值</span></span><br><span class="line">			<span class="comment">// 如果映射存在nestedQueryId，会调用getNestedQueryMappingValue方法获取返回值</span></span><br><span class="line">			foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;</span><br><span class="line">			foundValues = lazyLoader.size() &gt; <span class="number">0</span> || foundValues;</span><br><span class="line">			rowValue = foundValues || configuration.isReturnInstanceForEmptyRow() ? rowValue : <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> rowValue;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">resultSetHandler</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/24/mybatis源码解析系列-resultSetHandler/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-mybatis源码解析系列-parameterHandler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/24/mybatis源码解析系列-parameterHandler/">mybatis源码解析系列-parameterHandler</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/24/mybatis源码解析系列-parameterHandler/" class="archive-article-date">
-  	<time datetime="2019-07-24T05:04:27.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="入口statementHandler-parameterize（）"><a href="#入口statementHandler-parameterize（）" class="headerlink" title="入口statementHandler#parameterize（）"></a>入口statementHandler#parameterize（）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parameterize</span><span class="params">(Statement statement)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line"><span class="comment">// 通过ParameterHandler处理参数</span></span><br><span class="line">   parameterHandler.setParameters((PreparedStatement) statement);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="defaultParameterHandler-setParamters"><a href="#defaultParameterHandler-setParamters" class="headerlink" title="defaultParameterHandler#setParamters()"></a>defaultParameterHandler#setParamters()</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setParameters</span><span class="params">(PreparedStatement ps)</span> </span>&#123;</span><br><span class="line">		ErrorContext.instance().activity(<span class="string">"setting parameters"</span>).object(mappedStatement.getParameterMap().getId());</span><br><span class="line">		<span class="comment">// 获取要设置的参数映射信息</span></span><br><span class="line">		List&lt;ParameterMapping&gt; parameterMappings = boundSql.getParameterMappings();</span><br><span class="line">		<span class="keyword">if</span> (parameterMappings != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parameterMappings.size(); i++) &#123;</span><br><span class="line">				ParameterMapping parameterMapping = parameterMappings.get(i);</span><br><span class="line">				<span class="comment">// 只处理入参</span></span><br><span class="line">				<span class="keyword">if</span> (parameterMapping.getMode() != ParameterMode.OUT) &#123;</span><br><span class="line">					Object value;</span><br><span class="line">					<span class="comment">// 获取属性名称</span></span><br><span class="line">					String propertyName = parameterMapping.getProperty();</span><br><span class="line">					<span class="keyword">if</span> (boundSql.hasAdditionalParameter(propertyName)) &#123; <span class="comment">// issue #448 ask first for additional params</span></span><br><span class="line">						value = boundSql.getAdditionalParameter(propertyName);</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameterObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">						value = <span class="keyword">null</span>;</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) &#123;</span><br><span class="line">						value = parameterObject;</span><br><span class="line">					&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">						MetaObject metaObject = configuration.newMetaObject(parameterObject);</span><br><span class="line">						value = metaObject.getValue(propertyName);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// 获取每个参数的类型处理器，去设置入参和获取返回值</span></span><br><span class="line">					TypeHandler typeHandler = parameterMapping.getTypeHandler();</span><br><span class="line">					<span class="comment">// 获取每个参数的JdbcType</span></span><br><span class="line">					JdbcType jdbcType = parameterMapping.getJdbcType();</span><br><span class="line">					<span class="keyword">if</span> (value == <span class="keyword">null</span> &amp;&amp; jdbcType == <span class="keyword">null</span>) &#123;</span><br><span class="line">						jdbcType = configuration.getJdbcTypeForNull();</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						<span class="comment">// 给PreparedStatement设置参数</span></span><br><span class="line">						typeHandler.setParameter(ps, i + <span class="number">1</span>, value, jdbcType);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (TypeException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>typeHandler给属性赋值，针对不同的类型，有不同类型的typeHandler</p>
-<h3 id="parameterHandler的体系结构"><a href="#parameterHandler的体系结构" class="headerlink" title="parameterHandler的体系结构"></a>parameterHandler的体系结构</h3><p> 接口 –ParameterHandler</p>
-<p>​    实现类 - DefaultParameterHandler</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">parameterHandler</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/24/mybatis源码解析系列-parameterHandler/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
@@ -1256,6 +1342,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
@@ -1264,7 +1354,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1272,19 +1362,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1292,7 +1370,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1300,7 +1382,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1328,11 +1418,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
+                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1348,23 +1438,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1372,7 +1446,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1380,11 +1466,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
