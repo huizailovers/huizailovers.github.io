@@ -152,6 +152,110 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-spring源码解析系列-Aware-BeanPostProcessor" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/">spring源码解析系列-Aware,BeanPostProcessor</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/" class="archive-article-date">
+  	<time datetime="2019-07-24T08:41:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="AbstartAutoWireCapableBeanFactory-doCreateBean"><a href="#AbstartAutoWireCapableBeanFactory-doCreateBean" class="headerlink" title="AbstartAutoWireCapableBeanFactory#doCreateBean"></a>AbstartAutoWireCapableBeanFactory#doCreateBean</h3><ul>
+<li><p>主要三件事</p>
+<ul>
+<li><p>实例化bean对象 #createBeanInstance()</p>
+</li>
+<li><p>属性注入 #populateBean()</p>
+</li>
+<li><p>初始化bean对象#initializeBean()</p>
+</li>
+</ul>
+</li>
+<li><p>初始化bean干的三件事</p>
+<ul>
+<li><p>激活Aware方法</p>
+</li>
+<li><p>BeanpostProcessor的应用</p>
+</li>
+<li><p>激活自定义的init() 方法</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>###Aware 接口</p>
+<p>实现了该接口bean具有被spirng容器通知的能力</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">invokeAwareMethods</span><span class="params">(<span class="keyword">final</span> String beanName, <span class="keyword">final</span> Object bean)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> Aware) &#123;</span><br><span class="line">	    <span class="comment">// BeanNameAware 实现了该接口，调用bean的setBeanName() 方法</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanNameAware) &#123;</span><br><span class="line">			((BeanNameAware) bean).setBeanName(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// BeanClassLoaderAware</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanClassLoaderAware) &#123;</span><br><span class="line">			ClassLoader bcl = getBeanClassLoader();</span><br><span class="line">			<span class="keyword">if</span> (bcl != <span class="keyword">null</span>) &#123;</span><br><span class="line">				((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// BeanFactoryAware</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanFactoryAware) &#123;</span><br><span class="line">			((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.<span class="keyword">this</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="BeanPostProcessor"><a href="#BeanPostProcessor" class="headerlink" title="BeanPostProcessor"></a>BeanPostProcessor</h3><p>在完成bean的实例化后，我们可以对bean增加一些自己的处理逻辑。</p>
+<p>getBeanPostProcessors()查询所有容器中BeanPostProcessor，如果集合中存在该元素，则调用相应的方法，否则直接返回bean。</p>
+<p>ApplicationContext实现了自动注册，在于我们构造一个 ApplicationContext 实例对象的时候会调用 <code>#registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory)</code> 方法，将检测到的 BeanPostProcessor 注入到 ApplicationContext 容器中，同时应用到该容器创建的 bean 中 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">applyBeanPostProcessorsAfterInitialization</span><span class="params">(Object existingBean, String beanName)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">		Object result = existingBean;</span><br><span class="line">		<span class="comment">// 没有实现beanPostProcessor 则直接返回了</span></span><br><span class="line">		<span class="comment">// 遍历所有的beanPostProcessor，执行对应的postProcessAfterInitialization，是否匹配当前的beanName，匹配创建代理对象返回</span></span><br><span class="line">		<span class="keyword">for</span> (BeanPostProcessor beanProcessor : getBeanPostProcessors()) &#123;</span><br><span class="line">			<span class="comment">// 该postProcessAfterInitialization 的实现类 AbstarctAtuoProxyCreator</span></span><br><span class="line">			Object current = beanProcessor.postProcessAfterInitialization(result, beanName);</span><br><span class="line">			<span class="keyword">if</span> (current == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> result;</span><br><span class="line">			&#125;</span><br><span class="line">			result = current;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Aware ，benPostProcessor 接口</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-mybatis源码解析系列-resultSetHandler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -915,136 +1019,6 @@
 
 
   
-    <article id="post-spring源码解析系列-bean标签解析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/14/spring源码解析系列-bean标签解析/">spring源码解析系列-bean标签解析</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/14/spring源码解析系列-bean标签解析/" class="archive-article-date">
-  	<time datetime="2019-07-14T06:44:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="constructor-arg"><a href="#constructor-arg" class="headerlink" title="constructor-arg"></a>constructor-arg</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseConstructorArgElement</span><span class="params">(Element ele, BeanDefinition bd)</span> </span>&#123;</span><br><span class="line">		String indexAttr = ele.getAttribute(INDEX_ATTRIBUTE);</span><br><span class="line">		String typeAttr = ele.getAttribute(TYPE_ATTRIBUTE);</span><br><span class="line">		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);</span><br><span class="line">		<span class="keyword">if</span> (StringUtils.hasLength(indexAttr)) &#123; <span class="comment">//标签有index</span></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="keyword">int</span> index = Integer.parseInt(indexAttr);</span><br><span class="line">				<span class="keyword">if</span> (index &lt; <span class="number">0</span>) &#123;</span><br><span class="line">					error(<span class="string">"'index' cannot be lower than 0"</span>, ele);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> &#123;</span><br><span class="line">					<span class="keyword">try</span> &#123;<span class="comment">//创建ConstructorArgumentEntry</span></span><br><span class="line">						<span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> ConstructorArgumentEntry(index));</span><br><span class="line">						Object value = parsePropertyValue(ele, bd, <span class="keyword">null</span>);</span><br><span class="line">						ConstructorArgumentValues.ValueHolder valueHolder = <span class="keyword">new</span> ConstructorArgumentValues.ValueHolder(value);</span><br><span class="line">                        <span class="comment">//根据解析的属性元素构造一个 ValueHolder 对象</span></span><br><span class="line">						<span class="keyword">if</span> (StringUtils.hasLength(typeAttr)) &#123;</span><br><span class="line">							valueHolder.setType(typeAttr);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">if</span> (StringUtils.hasLength(nameAttr)) &#123;</span><br><span class="line">							valueHolder.setName(nameAttr);</span><br><span class="line">						&#125;</span><br><span class="line">						valueHolder.setSource(extractSource(ele));</span><br><span class="line">						<span class="keyword">if</span> (bd.getConstructorArgumentValues().hasIndexedArgumentValue(index)) &#123;</span><br><span class="line">							error(<span class="string">"Ambiguous constructor-arg entries for index "</span> + index, ele);</span><br><span class="line">						&#125;</span><br><span class="line">						<span class="keyword">else</span> &#123;</span><br><span class="line">							bd.getConstructorArgumentValues().addIndexedArgumentValue(index, valueHolder);</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">finally</span> &#123;</span><br><span class="line">						<span class="keyword">this</span>.parseState.pop();</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (NumberFormatException ex) &#123;</span><br><span class="line">				error(<span class="string">"Attribute 'index' of tag 'constructor-arg' must be an integer"</span>, ele);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;<span class="comment">//标签没有index</span></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> ConstructorArgumentEntry());</span><br><span class="line">				Object value = parsePropertyValue(ele, bd, <span class="keyword">null</span>);</span><br><span class="line">				ConstructorArgumentValues.ValueHolder valueHolder = <span class="keyword">new</span> ConstructorArgumentValues.ValueHolder(value);</span><br><span class="line">				<span class="keyword">if</span> (StringUtils.hasLength(typeAttr)) &#123;</span><br><span class="line">					valueHolder.setType(typeAttr);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">if</span> (StringUtils.hasLength(nameAttr)) &#123;</span><br><span class="line">					valueHolder.setName(nameAttr);</span><br><span class="line">				&#125;</span><br><span class="line">				valueHolder.setSource(extractSource(ele));</span><br><span class="line">				bd.getConstructorArgumentValues().addGenericArgumentValue(valueHolder);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">finally</span> &#123;</span><br><span class="line">				<span class="keyword">this</span>.parseState.pop();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="public-Object-parsePropertyValue-Element-ele-BeanDefinition-bd-Nullable-String-propertyName"><a href="#public-Object-parsePropertyValue-Element-ele-BeanDefinition-bd-Nullable-String-propertyName" class="headerlink" title="public Object parsePropertyValue(Element ele, BeanDefinition bd, @Nullable String propertyName) {"></a>public Object parsePropertyValue(Element ele, BeanDefinition bd, @Nullable String propertyName) {</h3><pre><code>    String elementName = (propertyName != null) ?
-                    &quot;&lt;property&gt; element for property &apos;&quot; + propertyName + &quot;&apos;&quot; :
-                    &quot;&lt;constructor-arg&gt; element&quot;;
-
-    // Should only have one child element: ref, value, list, etc.
-    NodeList nl = ele.getChildNodes();
-    Element subElement = null;
-    for (int i = 0; i &lt; nl.getLength(); i++) {
-        Node node = nl.item(i);
-        if (node instanceof Element &amp;&amp; !nodeNameEquals(node, DESCRIPTION_ELEMENT) &amp;&amp;
-                !nodeNameEquals(node, META_ELEMENT)) {
-            // Child element is what we&apos;re looking for.
-            if (subElement != null) {
-                error(elementName + &quot; must not contain more than one sub-element&quot;, ele);
-            }
-            else {
-                subElement = (Element) node;
-            }
-        }
-    }
-
-    boolean hasRefAttribute = ele.hasAttribute(REF_ATTRIBUTE);
-    boolean hasValueAttribute = ele.hasAttribute(VALUE_ATTRIBUTE);
-    if ((hasRefAttribute &amp;&amp; hasValueAttribute) ||
-            ((hasRefAttribute || hasValueAttribute) &amp;&amp; subElement != null)) {
-        error(elementName +
-                &quot; is only allowed to contain either &apos;ref&apos; attribute OR &apos;value&apos; attribute OR sub-element&quot;, ele);
-    }
-
-    if (hasRefAttribute) {
-        String refName = ele.getAttribute(REF_ATTRIBUTE);
-        if (!StringUtils.hasText(refName)) {
-            error(elementName + &quot; contains empty &apos;ref&apos; attribute&quot;, ele);
-        }
-        // 引用类型属性值信息
-        RuntimeBeanReference ref = new RuntimeBeanReference(refName);
-        ref.setSource(extractSource(ele));
-        return ref;
-    }
-    else if (hasValueAttribute) {
-        // 简单类型属性值信息
-        TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
-        valueHolder.setSource(extractSource(ele));
-        return valueHolder;
-    }
-    else if (subElement != null) {
-        return parsePropertySubElement(subElement, bd);
-    }
-    else {
-        // Neither child element nor &quot;ref&quot; or &quot;value&quot; attribute found.
-        error(elementName + &quot; must specify a ref or value&quot;, ele);
-        return null;
-    }
-}</code></pre><h3 id="parsePropertyValue（）继续property标签"><a href="#parsePropertyValue（）继续property标签" class="headerlink" title="parsePropertyValue（）继续property标签"></a>parsePropertyValue（）继续property标签</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">parsePropertyValue</span><span class="params">(Element ele, BeanDefinition bd, @Nullable String propertyName)</span> </span>&#123;</span><br><span class="line">		String elementName = (propertyName != <span class="keyword">null</span>) ?</span><br><span class="line">						<span class="string">"&lt;property&gt; element for property '"</span> + propertyName + <span class="string">"'"</span> :</span><br><span class="line">						<span class="string">"&lt;constructor-arg&gt; element"</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Should only have one child element: ref, value, list, etc.</span></span><br><span class="line">		NodeList nl = ele.getChildNodes();</span><br><span class="line">		Element subElement = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nl.getLength(); i++) &#123;</span><br><span class="line">			Node node = nl.item(i);</span><br><span class="line">			<span class="keyword">if</span> (node <span class="keyword">instanceof</span> Element &amp;&amp; !nodeNameEquals(node, DESCRIPTION_ELEMENT) &amp;&amp;</span><br><span class="line">					!nodeNameEquals(node, META_ELEMENT)) &#123;</span><br><span class="line">				<span class="comment">// Child element is what we're looking for.</span></span><br><span class="line">				<span class="keyword">if</span> (subElement != <span class="keyword">null</span>) &#123;</span><br><span class="line">					error(elementName + <span class="string">" must not contain more than one sub-element"</span>, ele);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span> &#123;</span><br><span class="line">					subElement = (Element) node;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">boolean</span> hasRefAttribute = ele.hasAttribute(REF_ATTRIBUTE);</span><br><span class="line">		<span class="keyword">boolean</span> hasValueAttribute = ele.hasAttribute(VALUE_ATTRIBUTE);</span><br><span class="line">		<span class="keyword">if</span> ((hasRefAttribute &amp;&amp; hasValueAttribute) ||</span><br><span class="line">				((hasRefAttribute || hasValueAttribute) &amp;&amp; subElement != <span class="keyword">null</span>)) &#123;</span><br><span class="line">			error(elementName +</span><br><span class="line">					<span class="string">" is only allowed to contain either 'ref' attribute OR 'value' attribute OR sub-element"</span>, ele);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (hasRefAttribute) &#123;</span><br><span class="line">			String refName = ele.getAttribute(REF_ATTRIBUTE);</span><br><span class="line">			<span class="keyword">if</span> (!StringUtils.hasText(refName)) &#123;</span><br><span class="line">				error(elementName + <span class="string">" contains empty 'ref' attribute"</span>, ele);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 引用类型属性值信息</span></span><br><span class="line">			RuntimeBeanReference ref = <span class="keyword">new</span> RuntimeBeanReference(refName);</span><br><span class="line">			ref.setSource(extractSource(ele));</span><br><span class="line">			<span class="keyword">return</span> ref;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (hasValueAttribute) &#123;</span><br><span class="line">			<span class="comment">// 简单类型属性值信息</span></span><br><span class="line">			TypedStringValue valueHolder = <span class="keyword">new</span> TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));</span><br><span class="line">			valueHolder.setSource(extractSource(ele));</span><br><span class="line">			<span class="keyword">return</span> valueHolder;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (subElement != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> parsePropertySubElement(subElement, bd);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// Neither child element nor "ref" or "value" attribute found.</span></span><br><span class="line">			error(elementName + <span class="string">" must specify a ref or value"</span>, ele);</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">constructor-arg ，property</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/14/spring源码解析系列-bean标签解析/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
@@ -1142,23 +1116,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1166,7 +1128,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1178,19 +1152,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1214,15 +1188,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1234,11 +1208,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1250,11 +1224,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1266,19 +1248,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">

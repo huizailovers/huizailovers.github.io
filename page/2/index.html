@@ -152,6 +152,116 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-多线程系列-sychronized" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/04/多线程系列-sychronized/">多线程系列-sychronized</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/04/多线程系列-sychronized/" class="archive-article-date">
+  	<time datetime="2019-08-04T06:23:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-04</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="sychronized"><a href="#sychronized" class="headerlink" title="sychronized"></a>sychronized</h3><ul>
+<li>解决多线程并发访问同一变量的时候，线程安全问题。</li>
+<li>重量级锁，1.6以后减少获取锁还有释放锁带来的性能消耗，加入了偏向锁和轻量级锁</li>
+</ul>
+<h3 id="sychronized-基本语法"><a href="#sychronized-基本语法" class="headerlink" title="sychronized 基本语法"></a>sychronized 基本语法</h3><ul>
+<li>修饰实例方法，作用于当前对象</li>
+<li>修饰静态方法。作用于类对象</li>
+<li>修饰代码块，指定加索对象</li>
+</ul>
+<h3 id="锁的存储"><a href="#锁的存储" class="headerlink" title="锁的存储"></a>锁的存储</h3><p>​    锁的时候，需要指定对象，对象存储包括，对象头，实例数据，填充信息。对象投中存放着锁的信息</p>
+<h3 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h3><ul>
+<li><p>使用场景 只有一个线程pinf的获取锁对象</p>
+</li>
+<li><p>当一个线程访问加了同步锁的代码块的时候，会在对象头中存放线程id，当线程再次进入的时候，根据线程id进行判断，不需要再次加锁，或者释放锁。直接在对象头中判断释放存储了偏向锁。</p>
+</li>
+</ul>
+<h3 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h3><ul>
+<li><p>使用场景： 两个线程来回交替执行，并且占用锁的时间不会太长。</p>
+</li>
+<li><p>线程在自己的栈帧中创建锁记录 LockRecord。</p>
+</li>
+<li><p>将锁对象的对象头复制到 栈帧中的锁记录上</p>
+</li>
+<li><p>将对象头的markword指向锁对象</p>
+</li>
+<li><h4 id="自旋锁"><a href="#自旋锁" class="headerlink" title="自旋锁"></a>自旋锁</h4><ul>
+<li>当线程来竞争轻量级锁的时候，并不会被阻塞，而是在自旋。for循环，每次询问获得锁的线程是否释放了锁。</li>
+<li>自旋自适应锁：jvm自己确定自旋的次数，一直自旋会导致消耗cpu</li>
+</ul>
+<h3 id="重量级锁"><a href="#重量级锁" class="headerlink" title="重量级锁"></a>重量级锁</h3></li>
+</ul>
+<p>反编译可以看到 sychronized 代码之前 会有 moniter.enter 和moniter.exit 两个指令，分别是获取锁和释放锁。</p>
+<p>每个锁对象都关联着对应的监视器对象 moniter。想要获取锁对象得先获取监视器moniter。而moniter 是依赖于系统的 互斥锁来实现的。线程被阻塞，便会进入到系统内核的调度状态。严重影响锁的性能。</p>
+<h3 id="wait-notify"><a href="#wait-notify" class="headerlink" title="wait-notify"></a>wait-notify</h3><ul>
+<li>wait notify 需要在同步代码块中，因为需要获取锁资源，通过锁资源来进行通信。不然，线程对所资源的状态是不确定的。</li>
+<li>wait的时候，线程会进行到等待队列，并不是同步队列。notify的时候，等待线程进入到同步队列。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">sychronized</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/04/多线程系列-sychronized/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-mysql深入解析-事务，mvcc" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1141,110 +1251,6 @@
 
 
   
-    <article id="post-spring源码解析系列-Aware-BeanPostProcessor" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/">spring源码解析系列-Aware,BeanPostProcessor</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/" class="archive-article-date">
-  	<time datetime="2019-07-24T08:41:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="AbstartAutoWireCapableBeanFactory-doCreateBean"><a href="#AbstartAutoWireCapableBeanFactory-doCreateBean" class="headerlink" title="AbstartAutoWireCapableBeanFactory#doCreateBean"></a>AbstartAutoWireCapableBeanFactory#doCreateBean</h3><ul>
-<li><p>主要三件事</p>
-<ul>
-<li><p>实例化bean对象 #createBeanInstance()</p>
-</li>
-<li><p>属性注入 #populateBean()</p>
-</li>
-<li><p>初始化bean对象#initializeBean()</p>
-</li>
-</ul>
-</li>
-<li><p>初始化bean干的三件事</p>
-<ul>
-<li><p>激活Aware方法</p>
-</li>
-<li><p>BeanpostProcessor的应用</p>
-</li>
-<li><p>激活自定义的init() 方法</p>
-</li>
-</ul>
-</li>
-</ul>
-<p>###Aware 接口</p>
-<p>实现了该接口bean具有被spirng容器通知的能力</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">invokeAwareMethods</span><span class="params">(<span class="keyword">final</span> String beanName, <span class="keyword">final</span> Object bean)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> Aware) &#123;</span><br><span class="line">	    <span class="comment">// BeanNameAware 实现了该接口，调用bean的setBeanName() 方法</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanNameAware) &#123;</span><br><span class="line">			((BeanNameAware) bean).setBeanName(beanName);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// BeanClassLoaderAware</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanClassLoaderAware) &#123;</span><br><span class="line">			ClassLoader bcl = getBeanClassLoader();</span><br><span class="line">			<span class="keyword">if</span> (bcl != <span class="keyword">null</span>) &#123;</span><br><span class="line">				((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// BeanFactoryAware</span></span><br><span class="line">		<span class="keyword">if</span> (bean <span class="keyword">instanceof</span> BeanFactoryAware) &#123;</span><br><span class="line">			((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.<span class="keyword">this</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="BeanPostProcessor"><a href="#BeanPostProcessor" class="headerlink" title="BeanPostProcessor"></a>BeanPostProcessor</h3><p>在完成bean的实例化后，我们可以对bean增加一些自己的处理逻辑。</p>
-<p>getBeanPostProcessors()查询所有容器中BeanPostProcessor，如果集合中存在该元素，则调用相应的方法，否则直接返回bean。</p>
-<p>ApplicationContext实现了自动注册，在于我们构造一个 ApplicationContext 实例对象的时候会调用 <code>#registerBeanPostProcessors(ConfigurableListableBeanFactory beanFactory)</code> 方法，将检测到的 BeanPostProcessor 注入到 ApplicationContext 容器中，同时应用到该容器创建的 bean 中 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">applyBeanPostProcessorsAfterInitialization</span><span class="params">(Object existingBean, String beanName)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">		Object result = existingBean;</span><br><span class="line">		<span class="comment">// 没有实现beanPostProcessor 则直接返回了</span></span><br><span class="line">		<span class="comment">// 遍历所有的beanPostProcessor，执行对应的postProcessAfterInitialization，是否匹配当前的beanName，匹配创建代理对象返回</span></span><br><span class="line">		<span class="keyword">for</span> (BeanPostProcessor beanProcessor : getBeanPostProcessors()) &#123;</span><br><span class="line">			<span class="comment">// 该postProcessAfterInitialization 的实现类 AbstarctAtuoProxyCreator</span></span><br><span class="line">			Object current = beanProcessor.postProcessAfterInitialization(result, beanName);</span><br><span class="line">			<span class="keyword">if</span> (current == <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> result;</span><br><span class="line">			&#125;</span><br><span class="line">			result = current;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Aware ，benPostProcessor 接口</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/24/spring源码解析系列-Aware-BeanPostProcessor/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
@@ -1342,23 +1348,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1366,7 +1360,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1378,19 +1384,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1414,15 +1420,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1434,11 +1440,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1450,11 +1456,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1466,19 +1480,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">

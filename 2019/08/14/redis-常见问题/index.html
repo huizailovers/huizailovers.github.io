@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="redis常用数据类型对应的数据结构 list 对应的是 压缩列表和 双向链表  压缩列表 - 数组的升级版，可以存储不同的类型，结构体中存放元素已经元素的长度。适用于存储的数据量较小。 优点：连续存储，节省内存。下标访问，效率高  双向链表： 数据量大，没有足够的连续存储空间，使用链表。      hash hash表   支持动态扩容，大于1的时候扩容为2，小于0.1的时候，缩容   set">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-08-18T14:32:11.938Z">
+<meta property="og:updated_time" content="2019-08-20T14:39:56.710Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="redis-常见问题">
 <meta name="twitter:description" content="redis常用数据类型对应的数据结构 list 对应的是 压缩列表和 双向链表  压缩列表 - 数组的升级版，可以存储不同的类型，结构体中存放元素已经元素的长度。适用于存储的数据量较小。 优点：连续存储，节省内存。下标访问，效率高  双向链表： 数据量大，没有足够的连续存储空间，使用链表。      hash hash表   支持动态扩容，大于1的时候扩容为2，小于0.1的时候，缩容   set">
@@ -262,6 +262,52 @@
 </ul>
 </li>
 </ul>
+<h3 id="缓存与数据库的双写一致性"><a href="#缓存与数据库的双写一致性" class="headerlink" title="缓存与数据库的双写一致性"></a>缓存与数据库的双写一致性</h3><ul>
+<li>先更新缓存，再更新数据库，会有性能问题。不建议使用</li>
+<li>先更新数据库，再删除缓存。如果删除缓存失败，导致数据的不一致性</li>
+<li>先删除缓存，再更新数据库。<ul>
+<li>问题 在高并发的场景下，线程A更新了数据库，线程B同时从缓存中读取走了旧数据。</li>
+<li>解决方案： 使用队列的方式，将更新数据库的操作放入到队列中，读取缓存的操作也压入到队列中同步等待。</li>
+</ul>
+</li>
+</ul>
+<h3 id="redis实现分布式锁"><a href="#redis实现分布式锁" class="headerlink" title="redis实现分布式锁"></a>redis实现分布式锁</h3><ul>
+<li><p>什么场景会使用到分布式锁？</p>
+<ul>
+<li>单进程多线程的时候 使用sychronized 就可以加上锁</li>
+<li>多进程多线程的时候，加分布式锁来控制访问同一资源</li>
+</ul>
+</li>
+<li><p>redis 如何实现分布式锁</p>
+<ul>
+<li><p>加锁</p>
+<ul>
+<li><p>方案1 setnx –&gt; 这是过期expire （该方案的问题 是 不是原子性操作，setnx后  进程挂掉，可能会造成死锁）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">getLock</span><span class="params">(String lockKey,String requestId,<span class="keyword">int</span> expireTime)</span> </span>&#123; </span><br><span class="line">    Long result = jedis.setnx(lockKey, requestId); </span><br><span class="line">    <span class="keyword">if</span>(result == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="comment">//成功设置 失效时间 </span></span><br><span class="line">        jedis.expire(lockKey, expireTime); </span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>; </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<pre><code>* 方案2 set 多参数（key，value，nx  ，ex，expiretime） </code></pre><ul>
+<li><p>解锁</p>
+<ul>
+<li><p>方案1   get key 后 ，此时过期，被其他线程加锁，导致删除掉的是别人的锁</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">releaseLock</span><span class="params">(String lockKey,String requestId)</span> </span>&#123; </span><br><span class="line">    <span class="keyword">if</span> (requestId.equals(jedis.get(lockKey))) &#123; </span><br><span class="line">        jedis.del(lockKey); </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>方案2 lua 脚本来释放锁 lua 脚本是原子性的 两个命令一起执行，其他线程被阻塞。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">releaseLock</span><span class="params">(String lockKey, String requestId)</span> </span>&#123;</span><br><span class="line">		String script = <span class="string">"if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"</span>;</span><br><span class="line">		Object result = jedis.eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestId));</span><br><span class="line">		<span class="keyword">if</span> (result.equals(<span class="number">1L</span>)) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+</li>
+</ul>
 
       
 
@@ -492,23 +538,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -516,7 +550,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -528,19 +574,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -564,15 +610,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -584,11 +630,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -600,11 +646,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -616,19 +670,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
