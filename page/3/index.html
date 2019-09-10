@@ -152,6 +152,267 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-mysql系列-锁" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/01/mysql系列-锁/">mysql系列-锁</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/01/mysql系列-锁/" class="archive-article-date">
+  	<time datetime="2019-08-01T04:35:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="表级锁-sql-layer层实现"><a href="#表级锁-sql-layer层实现" class="headerlink" title="表级锁 sql layer层实现"></a>表级锁 sql layer层实现</h3><ul>
+<li>表锁 (平常也不会加表锁)<ul>
+<li>共享读 - 加了读锁后，可以加读锁，不能加写锁<ul>
+<li>session1 加读锁，lock table mylock read;  </li>
+<li>session2 可以读 ，不可改数据 update mylock set name=’x’ where id=2; – 修改阻塞,自动加行写锁 </li>
+<li>sessio1 释放锁  unlock tables;  session2 可以更改</li>
+</ul>
+</li>
+<li>排他写 - 加了写锁以后，不能加读锁，也不能加写锁。<ul>
+<li>session1 加写锁  lock table mylock write;  </li>
+<li>session2 不可以读，也不可以写。select * from mylock; – 查询阻塞 </li>
+<li>session1 释放锁  unlock tables; </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>元数据锁（表结构锁，自动加） – curd的时候不能ddl，ddl的时候不能curd<ul>
+<li>curd 加读锁，不能更改表结构</li>
+<li>ddl 加写锁，不能curd</li>
+</ul>
+</li>
+</ul>
+<h3 id="行级锁"><a href="#行级锁" class="headerlink" title="行级锁"></a>行级锁</h3><p>innoDB 行锁是通过给索引上的索引项加锁实现的，因此只有通过索引条件检索的时候，InnoDB才会使用行锁，否则使用全表锁。 </p>
+<ul>
+<li><p>共享读锁 （手动加）</p>
+<ul>
+<li>需要手动加读锁 select * from mylock where ID =1 lock in share mode; 未锁定行可以修改，锁定行不可以修改</li>
+<li>手动加的行读锁，没有使用索引，会升级为表读锁。</li>
+</ul>
+</li>
+<li><p>排他写锁 （自动加）</p>
+<ul>
+<li><p>update等语句会自动加上行写锁。</p>
+</li>
+<li><p>session1 加上行写锁，session2 select * from mylock where id=1 ; 可以读，因为没有加锁，</p>
+<p>select * from mylock where id =1 lock in share model 加读锁 ，被阻塞。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h3><p>​    两个session互相等待对方的资源释放之后，才能释放自己的资源。</p>
+<p>​    msyql会自动检测mysql的死锁，当发现出现死锁的时候，一个session自动rollback； </p>
+<h3 id="innodb的内存结构"><a href="#innodb的内存结构" class="headerlink" title="innodb的内存结构"></a>innodb的内存结构</h3><ul>
+<li>buffer  pool 缓冲池 。sql语句执行的的时候，比如update等会将信息更新到缓冲池中。由另一个线程从缓冲池中拿数据，然后保存到磁盘上。</li>
+<li>redo log buffer 重做日志缓冲。因为数据在落盘的时候，先存储日志。日志是顺序io，存储效率高。数据是随机io，效率低。在写redolog的时候，先写 redo log buffer。 事务提交commit成功是在redolog 日志写完之后。redolog 是两阶段提交。redolog 处于prepare状态，由执行器写binlog。binlog写完后，通知存储引擎，存储引擎将redolog改为commit状态。更新完成，事务提交成功。（force log at commit）保证redolog完全持久化后，事务才算操作成功。innodb_flflush_log_at_trx_commit  设置为1</li>
+<li>锁信息</li>
+<li>自适应hash索引</li>
+<li>元数据信息</li>
+</ul>
+<h3 id="落盘机制"><a href="#落盘机制" class="headerlink" title="落盘机制"></a>落盘机制</h3><p>将内存（缓存buffer pool）中的数据写入到磁盘上。</p>
+<p>checkpoint 检查点：表示脏页数据写入到磁盘的时机。</p>
+<ol>
+<li>redolog 日志文件满的时候</li>
+<li>buffer pool 缓存不够用的时候。</li>
+</ol>
+<h3 id="mysql的加锁分析"><a href="#mysql的加锁分析" class="headerlink" title="mysql的加锁分析"></a>mysql的加锁分析</h3><p>rc的隔离级别下 主要是针对的更新操作，不是针对插入操作，所以加的是行记录锁</p>
+<p>rr的级别下，主要针对的是插入操作，加的行锁是间隙锁。</p>
+<h3 id="串行化的隔离级别"><a href="#串行化的隔离级别" class="headerlink" title="串行化的隔离级别"></a>串行化的隔离级别</h3><p>经过测试发现：</p>
+<ul>
+<li>该隔离级别下，任何语句都会加锁，select 都会加上行读锁</li>
+<li>当没有用到索引的时候，行锁会上升为表锁。</li>
+</ul>
+<h3 id="一条sql语句的加锁分析"><a href="#一条sql语句的加锁分析" class="headerlink" title="一条sql语句的加锁分析"></a>一条sql语句的加锁分析</h3><ul>
+<li>前提<ul>
+<li>索引类型</li>
+<li>是否有索引</li>
+<li>隔离级别</li>
+</ul>
+</li>
+<li>delete from tuser where name =1 ； 如果 name是非唯一索引，并且在rc的隔离级别下，记录锁，如果是rr的隔离级别下是间隙锁 + 记录锁。innode 的rr隔离级别下，可以防止幻读。因为可以锁缝隙。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/01/mysql系列-锁/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-mysql-深入解析索引" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/29/mysql-深入解析索引/">mysql-深入解析索引</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/29/mysql-深入解析索引/" class="archive-article-date">
+  	<time datetime="2019-07-29T15:10:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-29</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="创建索引场景"><a href="#创建索引场景" class="headerlink" title="创建索引场景"></a>创建索引场景</h3><ul>
+<li>主键自动创建索引</li>
+<li>频繁查询条件</li>
+<li>多表关联，关联字段创建索引。两边都创建，不然索引失效</li>
+<li>排序字段创建索引</li>
+<li>覆盖索引</li>
+<li>分组创建索引</li>
+</ul>
+<h3 id="组合索引"><a href="#组合索引" class="headerlink" title="组合索引"></a>组合索引</h3><ul>
+<li><p>优势：省空间，容易形成覆盖索引</p>
+</li>
+<li><p>最左前缀（最左n个字段，也可以是字符串索引最左m个字符）</p>
+</li>
+</ul>
+<h3 id="索引覆盖"><a href="#索引覆盖" class="headerlink" title="索引覆盖"></a>索引覆盖</h3><ul>
+<li>直接可以在索引树返回结果，不需要回表 select name from user ； </li>
+</ul>
+<h3 id="索引下推"><a href="#索引下推" class="headerlink" title="索引下推"></a>索引下推</h3><ul>
+<li>mysql5.6后，将sqlserver层的查询条件下推到了存储引擎层，在索引树上直接根据条件过滤出结果，将结果返回给sqlserver层。例如 name，age的联合索引</li>
+</ul>
+<h3 id="expalin-执行计划"><a href="#expalin-执行计划" class="headerlink" title="expalin 执行计划"></a>expalin 执行计划</h3><ul>
+<li><p>type</p>
+<ul>
+<li><p>system 表示只有一行数据 或者空表</p>
+<ul>
+<li><p>const 唯一索引 或者主键</p>
+</li>
+<li><p>eq_ref 连接字段主键或者唯一性索引</p>
+</li>
+<li><p>ref 非唯一索引，等值查询，最左前缀查询</p>
+</li>
+<li><p>range 范围查询 ，like 查询</p>
+</li>
+<li><p>index 覆盖索引</p>
+</li>
+<li><p>all 全表扫描</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="extra（额外信息）"><a href="#extra（额外信息）" class="headerlink" title="extra（额外信息）"></a>extra（额外信息）</h3><ul>
+<li><p>using index 查询时不需要回表查询</p>
+</li>
+<li><p>using emporary 使用了临时表存储中间结果</p>
+</li>
+<li><p>using where 表示存储引擎繁华的并不是所有的满足查询条件的。需要server层进行过滤</p>
+</li>
+</ul>
+<h3 id="索引失效分析"><a href="#索引失效分析" class="headerlink" title="索引失效分析"></a>索引失效分析</h3><ul>
+<li>全值匹配</li>
+<li>带头索引不能死，中间索引不能断</li>
+<li>不要在索引上做计算</li>
+<li>范围条件右边列失效</li>
+<li>尽量使用覆盖索引</li>
+<li>索引字段上不要使用不等</li>
+<li>like不以通配符% 开头</li>
+</ul>
+<p>索引使用位置 select 后面， type 是index 索引覆盖</p>
+<p>where 后面 。type不固定 最好的是 主键索引(唯一索引，不用回表) &gt; 唯一索引  &gt;普通索引 组合索引</p>
+<p>关联查询</p>
+<p>order by  叶子节点是有顺序的，不用sqlserver层再排序</p>
+<p>索引下推</p>
+<p>explain</p>
+<p>索引失效</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/29/mysql-深入解析索引/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-设计模式-静态代理" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -955,174 +1216,6 @@
 
 
   
-    <article id="post-mybatis源码解析系列-parameterHandler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/24/mybatis源码解析系列-parameterHandler/">mybatis源码解析系列-parameterHandler</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/24/mybatis源码解析系列-parameterHandler/" class="archive-article-date">
-  	<time datetime="2019-07-24T05:04:27.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="入口statementHandler-parameterize（）"><a href="#入口statementHandler-parameterize（）" class="headerlink" title="入口statementHandler#parameterize（）"></a>入口statementHandler#parameterize（）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parameterize</span><span class="params">(Statement statement)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line"><span class="comment">// 通过ParameterHandler处理参数</span></span><br><span class="line">   parameterHandler.setParameters((PreparedStatement) statement);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="defaultParameterHandler-setParamters"><a href="#defaultParameterHandler-setParamters" class="headerlink" title="defaultParameterHandler#setParamters()"></a>defaultParameterHandler#setParamters()</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setParameters</span><span class="params">(PreparedStatement ps)</span> </span>&#123;</span><br><span class="line">		ErrorContext.instance().activity(<span class="string">"setting parameters"</span>).object(mappedStatement.getParameterMap().getId());</span><br><span class="line">		<span class="comment">// 获取要设置的参数映射信息</span></span><br><span class="line">		List&lt;ParameterMapping&gt; parameterMappings = boundSql.getParameterMappings();</span><br><span class="line">		<span class="keyword">if</span> (parameterMappings != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parameterMappings.size(); i++) &#123;</span><br><span class="line">				ParameterMapping parameterMapping = parameterMappings.get(i);</span><br><span class="line">				<span class="comment">// 只处理入参</span></span><br><span class="line">				<span class="keyword">if</span> (parameterMapping.getMode() != ParameterMode.OUT) &#123;</span><br><span class="line">					Object value;</span><br><span class="line">					<span class="comment">// 获取属性名称</span></span><br><span class="line">					String propertyName = parameterMapping.getProperty();</span><br><span class="line">					<span class="keyword">if</span> (boundSql.hasAdditionalParameter(propertyName)) &#123; <span class="comment">// issue #448 ask first for additional params</span></span><br><span class="line">						value = boundSql.getAdditionalParameter(propertyName);</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameterObject == <span class="keyword">null</span>) &#123;</span><br><span class="line">						value = <span class="keyword">null</span>;</span><br><span class="line">					&#125; <span class="keyword">else</span> <span class="keyword">if</span> (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) &#123;</span><br><span class="line">						value = parameterObject;</span><br><span class="line">					&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">						MetaObject metaObject = configuration.newMetaObject(parameterObject);</span><br><span class="line">						value = metaObject.getValue(propertyName);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// 获取每个参数的类型处理器，去设置入参和获取返回值</span></span><br><span class="line">					TypeHandler typeHandler = parameterMapping.getTypeHandler();</span><br><span class="line">					<span class="comment">// 获取每个参数的JdbcType</span></span><br><span class="line">					JdbcType jdbcType = parameterMapping.getJdbcType();</span><br><span class="line">					<span class="keyword">if</span> (value == <span class="keyword">null</span> &amp;&amp; jdbcType == <span class="keyword">null</span>) &#123;</span><br><span class="line">						jdbcType = configuration.getJdbcTypeForNull();</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">try</span> &#123;</span><br><span class="line">						<span class="comment">// 给PreparedStatement设置参数</span></span><br><span class="line">						typeHandler.setParameter(ps, i + <span class="number">1</span>, value, jdbcType);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (TypeException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">						<span class="keyword">throw</span> <span class="keyword">new</span> TypeException(</span><br><span class="line">								<span class="string">"Could not set parameters for mapping: "</span> + parameterMapping + <span class="string">". Cause: "</span> + e, e);</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>typeHandler给属性赋值，针对不同的类型，有不同类型的typeHandler</p>
-<h3 id="parameterHandler的体系结构"><a href="#parameterHandler的体系结构" class="headerlink" title="parameterHandler的体系结构"></a>parameterHandler的体系结构</h3><p> 接口 –ParameterHandler</p>
-<p>​    实现类 - DefaultParameterHandler</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">parameterHandler</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/24/mybatis源码解析系列-parameterHandler/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-mybatis源码解析系列-executor" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/23/mybatis源码解析系列-executor/">mybatis源码解析系列-executor</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/23/mybatis源码解析系列-executor/" class="archive-article-date">
-  	<time datetime="2019-07-23T10:09:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-23</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="executor的体系结构"><a href="#executor的体系结构" class="headerlink" title="executor的体系结构"></a>executor的体系结构</h3><p>接口–Executor</p>
-<p>实现类 - cachingExecutor（二级缓存）</p>
-<p>实现类 - baseExecutor </p>
-<p>​        子类 - SimpleExecutor（真正做查询执行器）</p>
-<p>Executor.query() 先调用cachingExecutor.query() 做查询，使用到了二级缓存。二级缓存是nameSpace 级别的。需要手动配置开启</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">query</span><span class="params">(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)</span></span></span><br><span class="line"><span class="function">     <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line"><span class="comment">// 获取二级缓存</span></span><br><span class="line">   Cache cache = ms.getCache();</span><br><span class="line">   <span class="keyword">if</span> (cache != <span class="keyword">null</span>) &#123;</span><br><span class="line">     <span class="comment">// 刷新二级缓存</span></span><br><span class="line">     flushCacheIfRequired(ms);</span><br><span class="line">     <span class="keyword">if</span> (ms.isUseCache() &amp;&amp; resultHandler == <span class="keyword">null</span>) &#123;</span><br><span class="line">       ensureNoOutParams(ms, boundSql);</span><br><span class="line">       <span class="comment">// 从二级缓存中查询数据</span></span><br><span class="line">       <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">       List&lt;E&gt; list = (List&lt;E&gt;) tcm.getObject(cache, key);</span><br><span class="line">       <span class="comment">// 如果二级缓存中没有查询到数据，则查询数据库</span></span><br><span class="line">       <span class="keyword">if</span> (list == <span class="keyword">null</span>) &#123;</span><br><span class="line">         <span class="comment">// 委托给BaseExecutor执行</span></span><br><span class="line">         list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">         tcm.putObject(cache, key, list); <span class="comment">// issue #578 and #116</span></span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> list;</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">// 委托给BaseExecutor执行</span></span><br><span class="line">   <span class="keyword">return</span> delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-<p>BaseExecutor#query() 从一级缓存中查询数据,一级缓存默认是开启的，无法关闭，是sqlSession级别的</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">query</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler,</span></span></span><br><span class="line"><span class="function"><span class="params">			CacheKey key, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">"executing a query"</span>).object(ms.getId());</span><br><span class="line">		<span class="keyword">if</span> (closed) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Executor was closed."</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (queryStack == <span class="number">0</span> &amp;&amp; ms.isFlushCacheRequired()) &#123;</span><br><span class="line">			clearLocalCache();</span><br><span class="line">		&#125;</span><br><span class="line">		List&lt;E&gt; list;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			queryStack++;</span><br><span class="line">			<span class="comment">// 从一级缓存中获取数据</span></span><br><span class="line">			list = resultHandler == <span class="keyword">null</span> ? (List&lt;E&gt;) localCache.getObject(key) : <span class="keyword">null</span>;</span><br><span class="line">			<span class="keyword">if</span> (list != <span class="keyword">null</span>) &#123;</span><br><span class="line">				handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// 如果一级缓存没有数据，则从数据库查询数据</span></span><br><span class="line">				list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			queryStack--;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (queryStack == <span class="number">0</span>) &#123;</span><br><span class="line">			<span class="comment">// 执行延迟加载</span></span><br><span class="line">			<span class="keyword">for</span> (DeferredLoad deferredLoad : deferredLoads) &#123;</span><br><span class="line">				deferredLoad.load();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// issue #601</span></span><br><span class="line">			<span class="comment">// 清空deferredLoads</span></span><br><span class="line">			deferredLoads.clear();</span><br><span class="line">			<span class="keyword">if</span> (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) &#123;</span><br><span class="line">				<span class="comment">// issue #482</span></span><br><span class="line">				clearLocalCache();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> list;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Executor# doQuery从数据库查数据 查完添加到缓存中,先生成statementHandler 对象。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">doQuery</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler,</span></span></span><br><span class="line"><span class="function"><span class="params">			BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 获取Configuration对象</span></span><br><span class="line">			Configuration configuration = ms.getConfiguration();</span><br><span class="line">			<span class="comment">// 创建RoutingStatementHandler，用来处理Statement</span></span><br><span class="line">			<span class="comment">// RoutingStatementHandler类中初始化delegate类（SimpleStatementHandler、PreparedStatementHandler）</span></span><br><span class="line">			StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds,</span><br><span class="line">					resultHandler, boundSql);</span><br><span class="line">			<span class="comment">// 子流程1：设置参数</span></span><br><span class="line">			stmt = prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">			<span class="comment">// 子流程2：执行SQL语句（已经设置过参数），并且映射结果集</span></span><br><span class="line">			<span class="keyword">return</span> handler.query(stmt, resultHandler);</span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			closeStatement(stmt);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">executor</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/23/mybatis源码解析系列-executor/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
@@ -1220,11 +1313,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
+                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1236,6 +1329,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
@@ -1244,15 +1341,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1260,11 +1349,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1280,10 +1373,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
               </li>
              
@@ -1292,7 +1381,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1300,11 +1389,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
+                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1312,15 +1401,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1340,19 +1433,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1360,11 +1449,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1372,15 +1457,27 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1393,6 +1490,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
               </li>
             
             <div class="clearfix"></div>
