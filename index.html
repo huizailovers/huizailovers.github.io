@@ -152,6 +152,512 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-zk系列-选举源码解析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/04/zk系列-选举源码解析/">zk系列-选举源码解析</a>
+    </h1>
+  
+
+        
+        <a href="/2019/09/04/zk系列-选举源码解析/" class="archive-article-date">
+  	<time datetime="2019-09-04T09:47:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-04</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="入口-FastLeaderElection-java"><a href="#入口-FastLeaderElection-java" class="headerlink" title="入口 FastLeaderElection.java"></a>入口 FastLeaderElection.java</h3><h3 id="选票的定义"><a href="#选票的定义" class="headerlink" title="选票的定义"></a>选票的定义</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Notification</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">		<span class="keyword">int</span> version;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Proposed leader 当前选票所推荐做Leader的ServerId</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">long</span> leader;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * zxid of the proposed leader 当前选票所推荐做Leader的最大zxid</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">long</span> zxid;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Epoch 当前本轮选举的epoch，即逻辑时钟</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">long</span> electionEpoch;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * current state of sender 当前通知的发送者的状态</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		QuorumPeer.ServerState state;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Address of sender 当前通知发送者的ServerId</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">long</span> sid;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 记录当前Server收到的来自于其它Server的本轮投票信息</span></span><br><span class="line"><span class="comment">// key为投票者的serverId，value为选票</span></span><br><span class="line"><span class="comment">// recvset集合就相当于票箱</span></span><br><span class="line">HashMap&lt;Long, Vote&gt; recvset = <span class="keyword">new</span> HashMap&lt;Long, Vote&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 用于记录所有退出选举的选票(不合法的选票)（out of，退出）</span></span><br><span class="line">HashMap&lt;Long, Vote&gt; outofelection = <span class="keyword">new</span> HashMap&lt;Long, Vote&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// notification timeout 初始化选举的时限</span></span><br><span class="line"><span class="keyword">int</span> notTimeout = finalizeWait;</span><br></pre></td></tr></table></figure>
+
+<h3 id="将自己作为初始化的leader投出去"><a href="#将自己作为初始化的leader投出去" class="headerlink" title="将自己作为初始化的leader投出去"></a>将自己作为初始化的leader投出去</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//注意的是逻辑时钟加1 表示的是新一轮的选举</span></span><br><span class="line"><span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">				<span class="comment">// 逻辑时钟加1 </span></span><br><span class="line">				logicalclock.incrementAndGet();</span><br><span class="line">				<span class="comment">// 更新选票：将自己推荐为初始化Leader</span></span><br><span class="line">				updateProposal(getInitId(), getInitLastLoggedZxid(), getPeerEpoch());</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			LOG.info(<span class="string">"New election. My id =  "</span> + self.getId() + <span class="string">", proposed zxid=0x"</span> + Long.toHexString(proposedZxid));</span><br><span class="line">			<span class="comment">// 将更新过的选票发送出去 发出去多少就会收到多少</span></span><br><span class="line">			sendNotifications();</span><br></pre></td></tr></table></figure>
+
+<h3 id="发送选票"><a href="#发送选票" class="headerlink" title="发送选票"></a>发送选票</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">sendNotifications</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 发送的时候，只会给不是observer的节点发送信息 ,不会给observer发送选票</span></span><br><span class="line">		<span class="keyword">for</span> (QuorumServer server : self.getVotingView().values()) &#123;</span><br><span class="line">			<span class="comment">// 获取当前遍历Server的id</span></span><br><span class="line">			<span class="keyword">long</span> sid = server.id; </span><br><span class="line"><span class="comment">// 发送出去的选票 需要指定serverid</span></span><br><span class="line">			ToSend notmsg = <span class="keyword">new</span> ToSend(ToSend.mType.notification, proposedLeader, proposedZxid, logicalclock.get(),</span><br><span class="line">					QuorumPeer.ServerState.LOOKING, sid, <span class="comment">// 指定接收者的server id</span></span><br><span class="line">					proposedEpoch);</span><br><span class="line">			<span class="comment">// 将推荐信息构成的数据结构notmsg添加到一个队列</span></span><br><span class="line">			sendqueue.offer(notmsg);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="验证自己的选票和大家的投票谁更适合当leader"><a href="#验证自己的选票和大家的投票谁更适合当leader" class="headerlink" title="验证自己的选票和大家的投票谁更适合当leader"></a>验证自己的选票和大家的投票谁更适合当leader</h3><ul>
+<li><h4 id="验证节点的状态"><a href="#验证节点的状态" class="headerlink" title="验证节点的状态"></a>验证节点的状态</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> ((self.getPeerState() == ServerState.LOOKING) &amp;&amp; (!stop)) </span><br><span class="line">    <span class="comment">//当前的节点是looking状态，并且选举没有结束。则继续进行</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">enum</span> ServerState &#123;</span><br><span class="line">        LOOKING, FOLLOWING, LEADING, OBSERVING;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//节点状态为 looking 选举状态，following 跟随，leading 选举 obervging 观察者状态</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><h4 id="判断队列中是否有票，是什么原因导致的"><a href="#判断队列中是否有票，是什么原因导致的" class="headerlink" title="判断队列中是否有票，是什么原因导致的"></a>判断队列中是否有票，是什么原因导致的</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">f (n == <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="keyword">if</span> (manager.haveDelivered()) &#123; <span class="comment">// 没有失去联系，重新发送选票</span></span><br><span class="line">						sendNotifications();</span><br><span class="line">					&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">						manager.connectAll(); <span class="comment">// 与集群重连。重连后，因为其他的server 肯定也是选举没有过半，所以就会重新发送选票。该节点就会收到选票</span></span><br><span class="line">					&#125;</span><br><span class="line">  <span class="comment">//为每一个server准备了一个失败的对列，只有有一个队列中没数据，则表明没有断开链接</span></span><br><span class="line">    <span class="comment">//如果队列中都有数据。则证明断开了连接。需要重连</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">haveDelivered</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">for</span> (ArrayBlockingQueue&lt;ByteBuffer&gt; queue : queueSendMap.values()) &#123;</span><br><span class="line">			LOG.debug(<span class="string">"Queue size: "</span> + queue.size());</span><br><span class="line">			<span class="keyword">if</span> (queue.size() == <span class="number">0</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><h4 id="验证选票是否是可用的"><a href="#验证选票是否是可用的" class="headerlink" title="验证选票是否是可用的"></a>验证选票是否是可用的</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//选票中的leader不能是observer并且选票的发送者不能是observer</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">switch</span> (n.state) &#123;</span><br><span class="line">					<span class="keyword">case</span> LOOKING:</span><br><span class="line">						<span class="comment">//三种情况</span></span><br><span class="line">        <span class="comment">//1.正常情况 当前的逻辑时钟等于收到选票的epoch</span></span><br><span class="line">        totalOrderPredicate(n.leader, n.zxid, n.peerEpoch, proposedLeader, proposedZxid,</span><br><span class="line">								proposedEpoch)) &#123;</span><br><span class="line">							updateProposal(n.leader, n.zxid, n.peerEpoch); <span class="comment">// 哪个更合适，则选哪个</span></span><br><span class="line">							sendNotifications(); <span class="comment">//将选票发出去</span></span><br><span class="line">            </span><br><span class="line">            <span class="comment">//如何验证是不是更合适</span></span><br><span class="line">        <span class="keyword">if</span> (self.getQuorumVerifier().getWeight(newId) == <span class="number">0</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 判断的规则是新节点的epoch 大，则更适合，如果epoch相同，比较事务id。事务id大的更合适。如果xid相同的话，</span></span><br><span class="line">		<span class="comment">// 比较myid 。也就是serverid。serverid大的适合做 leader</span></span><br><span class="line">		<span class="keyword">return</span> ((newEpoch &gt; curEpoch)</span><br><span class="line">				|| ((newEpoch == curEpoch) &amp;&amp; ((newZxid &gt; curZxid) || ((newZxid == curZxid) &amp;&amp; (newId &gt; curId)))));</span><br></pre></td></tr></table></figure>
+
+<h4 id="非正常的情况-epoch和-逻辑时钟不同"><a href="#非正常的情况-epoch和-逻辑时钟不同" class="headerlink" title="非正常的情况 epoch和 逻辑时钟不同"></a>非正常的情况 epoch和 逻辑时钟不同</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//证明已经不是同一轮的选举了 该情况会发生在一个新的leader被选出来，又马上挂掉了。再次选举</span></span><br><span class="line"><span class="keyword">if</span> (n.electionEpoch &gt; logicalclock.get()) &#123;</span><br><span class="line">	logicalclock.set(n.electionEpoch);</span><br><span class="line">							recvset.clear(); <span class="comment">// 清空票箱</span></span><br><span class="line">							<span class="comment">// 判断哪个选票更加合适</span></span><br><span class="line">							<span class="keyword">if</span> (totalOrderPredicate(n.leader, n.zxid, n.peerEpoch, getInitId(), getInitLastLoggedZxid(),</span><br><span class="line">									getPeerEpoch())) &#123;</span><br><span class="line">								updateProposal(n.leader, n.zxid, n.peerEpoch);<span class="comment">// 更新选票</span></span><br><span class="line">							&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">								updateProposal(getInitId(), getInitLastLoggedZxid(), getPeerEpoch()); <span class="comment">// 更新选票为自己</span></span><br><span class="line">							&#125;</span><br><span class="line">							sendNotifications();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="判断本轮选举是否该结束了"><a href="#判断本轮选举是否该结束了" class="headerlink" title="判断本轮选举是否该结束了"></a>判断本轮选举是否该结束了</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//验证这个选票在票箱中是否过半了</span></span><br><span class="line"><span class="keyword">if</span> (termPredicate(recvset,</span><br><span class="line">								<span class="keyword">new</span> Vote(proposedLeader, proposedZxid, logicalclock.get(), proposedEpoch))) &#123;</span><br><span class="line">	</span><br><span class="line">		<span class="comment">//1.过半了，票箱中没票了 则 更改状态</span></span><br><span class="line">    self.setPeerState(</span><br><span class="line">										(proposedLeader == self.getId()) ? ServerState.LEADING : learningState()); <span class="comment">//自己是leader 或者 follower</span></span><br><span class="line"></span><br><span class="line">								Vote endVote = <span class="keyword">new</span> Vote(proposedLeader, proposedZxid, logicalclock.get(),</span><br><span class="line">										proposedEpoch);</span><br><span class="line">								leaveInstance(endVote);<span class="comment">//清空票箱</span></span><br><span class="line">    </span><br><span class="line">    	<span class="comment">//2，过半了。票箱中还有票。</span></span><br><span class="line">    <span class="comment">//剩下的票更合适，则将选票放到队列中</span></span><br><span class="line">    <span class="keyword">if</span> (totalOrderPredicate(n.leader, n.zxid, n.peerEpoch, proposedLeader, proposedZxid,</span><br><span class="line">										proposedEpoch)) &#123;</span><br><span class="line">									recvqueue.put(n);</span><br><span class="line">									<span class="keyword">break</span>;</span><br><span class="line">								</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="无需选举"><a href="#无需选举" class="headerlink" title="无需选举"></a>无需选举</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//产生following和leading的情况</span></span><br><span class="line"><span class="comment">//1. 本轮选举出了leader。但是还没有通知到 当前server。已经完成选举的server既有leader又有follower。该时候收到的就是leading和 following</span></span><br><span class="line"><span class="comment">//2. 当一个新的leader 加入到正常的集群的时候，状态处于looking，该情况下会接收到其他server的following</span></span><br><span class="line"><span class="comment">//3.当leader挂了，但是有些server还是没感知到的。这些server的状态是following</span></span><br><span class="line"><span class="keyword">case</span> FOLLOWING:</span><br><span class="line"><span class="keyword">case</span> LEADING:</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(n.electionEpoch == logicalclock.get())&#123;</span><br><span class="line">                            <span class="comment">// 将通知选票放入“票箱” 跟上面的逻辑一样。，超过半数。则变更状态</span></span><br><span class="line">                            recvset.put(n.sid, <span class="keyword">new</span> Vote(n.leader,</span><br><span class="line">                                                          n.zxid,</span><br><span class="line">                                                          n.electionEpoch,</span><br><span class="line">                                                          n.peerEpoch));</span><br><span class="line">                           </span><br><span class="line">                            <span class="keyword">if</span>(ooePredicate(recvset, outofelection, n)) &#123;</span><br><span class="line">                                self.setPeerState((n.leader == self.getId()) ?</span><br><span class="line">                                        ServerState.LEADING: learningState());</span><br><span class="line"></span><br><span class="line">                                Vote endVote = <span class="keyword">new</span> Vote(n.leader, </span><br><span class="line">                                        n.zxid, </span><br><span class="line">                                        n.electionEpoch, </span><br><span class="line">                                        n.peerEpoch);</span><br><span class="line">                                leaveInstance(endVote);</span><br><span class="line">                                <span class="keyword">return</span> endVote;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line"><span class="comment">//下面代码处理将一个server加入到一个选举出来leader的集群中</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//将选票往 outofelection 集合中放。当废弃的集合中的票 超过半数一致的时候。选举出新的leader</span></span><br><span class="line"> outofelection.put(n.sid, <span class="keyword">new</span> Vote(n.version,</span><br><span class="line">                                                            n.leader,</span><br><span class="line">                                                            n.zxid,</span><br><span class="line">                                                            n.electionEpoch,</span><br><span class="line">                                                            n.peerEpoch,</span><br><span class="line">                                                            n.state));</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span>(ooePredicate(outofelection, outofelection, n)) &#123;</span><br><span class="line">                            <span class="keyword">synchronized</span>(<span class="keyword">this</span>)&#123;</span><br><span class="line">                                logicalclock.set(n.electionEpoch);</span><br><span class="line">                                self.setPeerState((n.leader == self.getId()) ?</span><br><span class="line">                                        ServerState.LEADING: learningState());</span><br><span class="line">                            &#125;</span><br><span class="line">                            Vote endVote = <span class="keyword">new</span> Vote(n.leader,</span><br><span class="line">                                                    n.zxid,</span><br><span class="line">                                                    n.electionEpoch,</span><br><span class="line">                                                    n.peerEpoch);</span><br><span class="line">                            leaveInstance(endVote);</span><br><span class="line">                            <span class="keyword">return</span> endVote;</span><br><span class="line">                        &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">选举源码解析</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/09/04/zk系列-选举源码解析/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-mysql-复盘" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/29/mysql-复盘/">mysql-复盘</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/29/mysql-复盘/" class="archive-article-date">
+  	<time datetime="2019-08-29T08:50:29.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-29</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="一个sql语句是如何执行的？"><a href="#一个sql语句是如何执行的？" class="headerlink" title="一个sql语句是如何执行的？"></a>一个sql语句是如何执行的？</h3><ul>
+<li>连接器 身份验证，权限验证</li>
+<li>缓存模块  DQL 查询语句 会先去缓存中查询，如果有 直接返回</li>
+<li>分析器： 词法分析，语法分析。</li>
+<li>查询优化器： 索引的选取，过滤条件的执行顺序</li>
+<li>执行器： 权限验证，调用存储引擎层的接口去查询数据。</li>
+</ul>
+<h3 id="一条更新语句是如何执行的？"><a href="#一条更新语句是如何执行的？" class="headerlink" title="一条更新语句是如何执行的？"></a>一条更新语句是如何执行的？</h3><ul>
+<li>更新数据，调用存储引擎层的接口，存储引擎将数据更新到内存中，并且记录到redolog中。此时redolog处于prepare状态，sqlserver层记录 binlog。记录的逻辑变换。binlog记录完成后，redolog 会将日志的状态改为commit。更新完成</li>
+<li>问什么使用两阶段提交？<ul>
+<li>不是两阶段提交会有问题。先redo 再 bin的话。redolog记录完成了。bin没有记录。机器宕机，恢复的时候。根据redolog 恢复数据。binlog中没有，机器备份的时候，会丢失记录</li>
+<li>先bin 再redo，根据redolog 来恢复数据的时候，redolog中没有数据，binlog中有数据，机器备份的时候会多数据</li>
+<li>两阶段提交的话，redolog处于prepare 状态，binlog记录完成。 则redolog提交日志。binlog不完整。 redolog 则回滚事务。</li>
+</ul>
+</li>
+</ul>
+<h3 id="什么是幻读？"><a href="#什么是幻读？" class="headerlink" title="什么是幻读？"></a>什么是幻读？</h3><ul>
+<li>一个事务读到另一个事务insert的数据？<ul>
+<li>前提1： 如果是快照读的话，读不到insert的数据，不会发生幻读，必须是当前读</li>
+<li>前提2： 是针对的insert 语句，不是udpate</li>
+</ul>
+</li>
+<li>如何实现的 防止幻读？<ul>
+<li>加的行锁，更新的时候，只能锁住行记录，需要加间隙锁，锁住缝隙。</li>
+<li>优点：能够解决幻读的问题，缺点，事务的并发能力下降。</li>
+</ul>
+</li>
+<li>幻读带来的问题？<ul>
+<li>会导致数据不一致的问题，比如对name = 5 的数据加上了行锁，就是更新name = 5 的所有数据，如果当前事务没有提交，后插入的数据先提交后。更新的时候则是将所有新插入的数据更新了进去。不符合语义。</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">常见问题</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/29/mysql-复盘/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-zk系列-paxios和zap协议" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/27/zk系列-paxios和zap协议/">zk系列-paxios和zap协议</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/27/zk系列-paxios和zap协议/" class="archive-article-date">
+  	<time datetime="2019-08-26T23:39:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-27</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><ul>
+<li>顺序一致性 同步一个客户端发起的事务，最终严格按照发起顺序记录到zk中。 </li>
+<li>原子性 所有事务请求的己过在所有主机是一致的</li>
+<li>单一视图 看到的数据模型是一致的</li>
+<li>最终一致性 一旦一个事务被成功应用，zk在很短的时间后，客户端可以从任意的sk主机上读取到最新的数据</li>
+</ul>
+<h3 id="paxos-算法"><a href="#paxos-算法" class="headerlink" title="paxos 算法"></a>paxos 算法</h3><ul>
+<li>用来解决什么问题？ 分布式系统中如何实现某个决议达成一致性</li>
+<li>怎么实现的？（每个proposer 提交提案，都会生成一个N，每个acceptor 都会比较n和本地的maxN，只会接受 大于maxN的提案，一旦一个提案被选中，其他服务器同步提案到本地）<ul>
+<li>分为两个阶段</li>
+<li>prepare  试探阶段，比较 max（N）</li>
+<li>accept 阶段 重新比较 是有可能其他人提交proposer ，比较的是max（N）和 prepare的n 因为防止，在试探结束后，有新的proposer提交提案。<ul>
+<li>失败后，可以重新提交或者是放弃提交</li>
+</ul>
+</li>
+<li>commit 提交信号量。这个中间过程中，只要接受了 proproser后，节点状态就会变成learning状态，不会再次提交提案了。</li>
+</ul>
+</li>
+</ul>
+<h3 id="ZAB-协议"><a href="#ZAB-协议" class="headerlink" title="ZAB 协议"></a>ZAB 协议</h3><p>为了解决主从分布式系统的一致性</p>
+<ul>
+<li>先 发送提案 ，然后比较 zxid。大于 则通过，超过半数通过，然后提交commit</li>
+<li>为什么要比较zxid 为了预防ABA的问题。 网络导致 但是出现ABA的问题时。会出现缺失数据。怎么保证的最终一致性</li>
+</ul>
+<h3 id="同步模式"><a href="#同步模式" class="headerlink" title="同步模式"></a>同步模式</h3><ul>
+<li><p>初始化同步</p>
+<ul>
+<li>新的leader 会将没有被同步的proposal，逐条发送给leaner，并且直接带着commit信号量。learner同步成功后，向leader 发送ack。将发送ack的列表</li>
+</ul>
+</li>
+<li><p>广播模式</p>
+<p>如上面所描述</p>
+</li>
+</ul>
+<h3 id="恢复模式的两个原则"><a href="#恢复模式的两个原则" class="headerlink" title="恢复模式的两个原则"></a>恢复模式的两个原则</h3><ul>
+<li>已被处理过的消息不能丢<ul>
+<li>当部分follower 接收到commit后，leader挂掉。leader 会从接收到commit后的节点中选出。</li>
+</ul>
+</li>
+<li>被丢弃的消息不能再现<ul>
+<li>当leader 提交到本地后，直接挂掉，没有发送commit。</li>
+</ul>
+</li>
+</ul>
+<h3 id="ABA问题的产生"><a href="#ABA问题的产生" class="headerlink" title="ABA问题的产生"></a>ABA问题的产生</h3><ul>
+<li>前提 leader 接收到 客户端的请求后，会存放到一个同步队列中，前一个proposal 提案通过后，然后从队列中取出下一个队列，然后再执行下一个。在这个时刻，会出现 那些没有反馈proposal的follower 由于网络问题，先接到后面的提案。这个时候，需要比较，然后丢弃掉前一个proposal。</li>
+<li>如果是对同一数据的操作，该方案没问题。如果不是对同一数据的操作，则会出现丢失数据的问题。如果处理数据的丢失，根据进程的状态，找到丢失数据的proposal。开始补数据</li>
+<li>这也就解释了，为什么部分proposal没有反馈ack，也要接收commit。等到commit的响应。响应commit的learner 则可以正常的提供服务了。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/27/zk系列-paxios和zap协议/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-数据结构与算法-解题思路总结" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/27/数据结构与算法-解题思路总结/">数据结构与算法-解题思路总结</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/27/数据结构与算法-解题思路总结/" class="archive-article-date">
+  	<time datetime="2019-08-26T23:38:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-27</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/27/数据结构与算法-解题思路总结/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-设计模式总结" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/27/设计模式总结/">设计模式总结</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/27/设计模式总结/" class="archive-article-date">
+  	<time datetime="2019-08-26T23:36:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-27</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/27/设计模式总结/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-并发编程系列-CHM" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/21/并发编程系列-CHM/">并发编程系列-CHM</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/21/并发编程系列-CHM/" class="archive-article-date">
+  	<time datetime="2019-08-20T22:49:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <ul>
+<li>CHM<ul>
+<li>collections.sychroniedMap()</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/21/并发编程系列-CHM/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-深入了解jvm系列-JIT编译器" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -750,583 +1256,9 @@
 
 
   
-    <article id="post-并发编程系列-线程池原理解析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/13/并发编程系列-线程池原理解析/">并发编程系列-线程池原理解析</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/13/并发编程系列-线程池原理解析/" class="archive-article-date">
-  	<time datetime="2019-08-13T04:44:33.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-13</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="线程池原理解析"><a href="#线程池原理解析" class="headerlink" title="线程池原理解析"></a>线程池原理解析</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize, //核心线程数</span></span></span><br><span class="line"><span class="function"><span class="params">                             <span class="keyword">int</span> maximumPoolSize, //最大线程数</span></span></span><br><span class="line"><span class="function"><span class="params">                             <span class="keyword">long</span> keepAliveTime, //非核心线程空闲存活时间</span></span></span><br><span class="line"><span class="function"><span class="params">                             TimeUnit unit, //单位</span></span></span><br><span class="line"><span class="function"><span class="params">                             BlockingQueue&lt;Runnable&gt; workQueue, //保存执行任务的队列</span></span></span><br><span class="line"><span class="function"><span class="params">                             ThreadFactory threadFactory,</span></span></span><br><span class="line"><span class="function"><span class="params">                             RejectedExecutionHandler handler)</span> </span>&#123;<span class="comment">//线程服务执行时候的处理方式</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="fixedThreadPool"><a href="#fixedThreadPool" class="headerlink" title="fixedThreadPool"></a>fixedThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</span><br><span class="line"><span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line"><span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//核心线程数等于最大线程数，没有非核心线程</span></span><br><span class="line"><span class="comment">//任务队列 使用LinkedBlockingQueue 容量无限大</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="cachedThreadPool"><a href="#cachedThreadPool" class="headerlink" title="cachedThreadPool"></a>cachedThreadPool</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,</span><br><span class="line">                                      <span class="number">60L</span>, TimeUnit.SECONDS,</span><br><span class="line">                                      <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//没有核心线程</span></span><br><span class="line"><span class="comment">//60s的过期时间，60s没有任务提交，就被回收</span></span><br><span class="line"><span class="comment">//非核心线程数量无上限。</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>提交任务 -&gt; 线程池中核心线程数是否满了，没有就创建核心线程，并执行任务，满了，就添加到阻塞队列中。-&gt; 线程池是否超过了最大的线程数，超过 - &gt;创建线程并执行任务。</p>
-<h3 id="合理分配线程池的大小"><a href="#合理分配线程池的大小" class="headerlink" title="合理分配线程池的大小"></a>合理分配线程池的大小</h3><ul>
-<li>分析是cpu密集型还是io密集型</li>
-<li>cpu密集型 多计算任务，cpu利用率很高。最大线程数 = cpu核数 （最大同时执行线程数）+ 1</li>
-<li>io密集型 cpu多空闲，增加线程池的大小，最大线程数 = cpu核数的两倍</li>
-</ul>
-<h3 id="线程池的初始化"><a href="#线程池的初始化" class="headerlink" title="线程池的初始化"></a>线程池的初始化</h3><ul>
-<li>默认 创建线程池后，是没有创建线程的。任务提交后才会创建线程</li>
-<li>使用 prestartAllCoreThreads 提前初始线程</li>
-</ul>
-<h3 id="callable-future-原理分析"><a href="#callable-future-原理分析" class="headerlink" title="callable/future 原理分析"></a>callable/future 原理分析</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//futureTask implment runnable 接口</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (state != NEW ||</span><br><span class="line">            !UNSAFE.compareAndSwapObject(<span class="keyword">this</span>, runnerOffset,</span><br><span class="line">                                         <span class="keyword">null</span>, Thread.currentThread()))</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Callable&lt;V&gt; c = callable;</span><br><span class="line">            <span class="keyword">if</span> (c != <span class="keyword">null</span> &amp;&amp; state == NEW) &#123;</span><br><span class="line">                V result;</span><br><span class="line">                <span class="keyword">boolean</span> ran;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    result = c.call(); <span class="comment">//调用 callable的call方法</span></span><br><span class="line">                    ran = <span class="keyword">true</span>;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">                    result = <span class="keyword">null</span>;</span><br><span class="line">                    ran = <span class="keyword">false</span>;</span><br><span class="line">                    setException(ex);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (ran)</span><br><span class="line">                    set(result); <span class="comment">//设置结果，设置结果完成后，将线程唤醒</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//get 方法</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">awaitDone</span><span class="params">(<span class="keyword">boolean</span> timed, <span class="keyword">long</span> nanos)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">long</span> deadline = timed ? System.nanoTime() + nanos : <span class="number">0L</span>;</span><br><span class="line">        WaitNode q = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">boolean</span> queued = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">            <span class="keyword">if</span> (Thread.interrupted()) &#123;</span><br><span class="line">                removeWaiter(q);</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">int</span> s = state;</span><br><span class="line">            <span class="keyword">if</span> (s &gt; COMPLETING) &#123;</span><br><span class="line">                <span class="keyword">if</span> (q != <span class="keyword">null</span>)</span><br><span class="line">                    q.thread = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">return</span> s;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (s == COMPLETING) <span class="comment">// cannot time out yet</span></span><br><span class="line">                Thread.yield();</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (q == <span class="keyword">null</span>)</span><br><span class="line">                q = <span class="keyword">new</span> WaitNode();</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (!queued)</span><br><span class="line">                queued = UNSAFE.compareAndSwapObject(<span class="keyword">this</span>, waitersOffset,</span><br><span class="line">                                                     q.next = waiters, q);</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (timed) &#123;</span><br><span class="line">                nanos = deadline - System.nanoTime();</span><br><span class="line">                <span class="keyword">if</span> (nanos &lt;= <span class="number">0L</span>) &#123;</span><br><span class="line">                    removeWaiter(q);</span><br><span class="line">                    <span class="keyword">return</span> state;</span><br><span class="line">                &#125;</span><br><span class="line">                LockSupport.parkNanos(<span class="keyword">this</span>, nanos);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                LockSupport.park(<span class="keyword">this</span>); <span class="comment">//获取数据的时候，将线程挂起</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="线程池执行callable-future"><a href="#线程池执行callable-future" class="headerlink" title="线程池执行callable/future"></a>线程池执行callable/future</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//submit 的时候 底层还是封装了 runnableFuture 调用的execute方法</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span> </span>&#123; </span><br><span class="line"><span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">RunnableFuture&lt;T&gt; ftask = newTaskFor(task);</span><br><span class="line">execute(ftask);</span><br><span class="line"><span class="keyword">return</span> ftask;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">线程池原理，callable/future原理</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/13/并发编程系列-线程池原理解析/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="w-并发编程系列-阻塞队列" class="article article-type-w  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/12/并发编程系列-阻塞队列/">并发编程系列-阻塞队列</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/12/并发编程系列-阻塞队列/" class="archive-article-date">
-  	<time datetime="2019-08-12T15:01:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-12</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="添加元素方法"><a href="#添加元素方法" class="headerlink" title="添加元素方法"></a>添加元素方法</h3><ul>
-<li><p>add 队列满了，直接抛出异常</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">add</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (offer(e)) <span class="comment">//调用offer</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Queue full"</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>offer 返回添加是否成功的标记，队列满了，返回false</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">        checkNotNull(e);</span><br><span class="line">        <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock; <span class="comment">//加锁</span></span><br><span class="line">        lock.lock();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (count == items.length) <span class="comment">//满了 返回false</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                enqueue(e); <span class="comment">//调用enqueue 添加数据</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>put 队列满了后，现在处于阻塞状态。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(E e)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        checkNotNull(e);</span><br><span class="line">        <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock;</span><br><span class="line">        lock.lockInterruptibly();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">while</span> (count == items.length) <span class="comment">//队列中数据满了</span></span><br><span class="line">                notFull.await(); <span class="comment">//线程今天到等待状态，今天到等待对垒</span></span><br><span class="line">            enqueue(e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>enqueue</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">enqueue</span><span class="params">(E x)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// assert lock.getHoldCount() == 1;</span></span><br><span class="line">        <span class="comment">// assert items[putIndex] == null;</span></span><br><span class="line">        <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;</span><br><span class="line">        items[putIndex] = x;</span><br><span class="line">        <span class="keyword">if</span> (++putIndex == items.length)</span><br><span class="line">            putIndex = <span class="number">0</span>; <span class="comment">//队列满了后，从0开始继续放</span></span><br><span class="line">        count++;</span><br><span class="line">        notEmpty.signal(); <span class="comment">//唤醒等待拿数据的线程</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h3 id="获取元素的方法"><a href="#获取元素的方法" class="headerlink" title="获取元素的方法"></a>获取元素的方法</h3><ul>
-<li><p>take</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">take</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">       <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock; <span class="comment">//获取的是同一把锁</span></span><br><span class="line">       lock.lockInterruptibly();</span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="keyword">while</span> (count == <span class="number">0</span>)</span><br><span class="line">               notEmpty.await(); <span class="comment">//如果没有数据，take 线程阻塞</span></span><br><span class="line">           <span class="keyword">return</span> dequeue();</span><br><span class="line">       &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">           lock.unlock();</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> E <span class="title">dequeue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">final</span> Object[] items = <span class="keyword">this</span>.items;</span><br><span class="line">       <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">       E x = (E) items[takeIndex];</span><br><span class="line">       items[takeIndex] = <span class="keyword">null</span>;</span><br><span class="line">       <span class="keyword">if</span> (++takeIndex == items.length)</span><br><span class="line">           takeIndex = <span class="number">0</span>;</span><br><span class="line">       count--;</span><br><span class="line">       <span class="keyword">if</span> (itrs != <span class="keyword">null</span>)</span><br><span class="line">           itrs.elementDequeued();</span><br><span class="line">       notFull.signal(); <span class="comment">// 获取数据后，唤醒等待put数据的线程往队列中添加数据。</span></span><br><span class="line">       <span class="keyword">return</span> x;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">ArrayBlockingQueue</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/12/并发编程系列-阻塞队列/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-多线程系列-volatile" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/12/多线程系列-volatile/">多线程系列-volatile</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/12/多线程系列-volatile/" class="archive-article-date">
-  	<time datetime="2019-08-12T05:04:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-12</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="jmm是做什么的"><a href="#jmm是做什么的" class="headerlink" title="jmm是做什么的"></a>jmm是做什么的</h3><p>解决数据的可见性和有序性。导致可见性的根本原因是cpu高速缓存和重排序。通过内存屏障来禁止重排序，和禁用cpu缓存。</p>
-<h3 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h3><ul>
-<li>编译器的重排序</li>
-<li>cpu的重排序（strore buffer 异步导致的cpu的乱序执行）</li>
-</ul>
-<h3 id="内存屏障"><a href="#内存屏障" class="headerlink" title="内存屏障"></a>内存屏障</h3><p>jmm提供了四种内存屏障来禁止编译器的指令重排序</p>
-<ul>
-<li>loadload load1 loadload load2   变量1 的加载肯定会在load2的加载之前</li>
-<li>store store</li>
-<li>store load store1 storeload load2 变量1 的更新优先于变量2 的读</li>
-<li>loadstore</li>
-</ul>
-<h3 id="cpu层面的内存屏障"><a href="#cpu层面的内存屏障" class="headerlink" title="cpu层面的内存屏障"></a>cpu层面的内存屏障</h3><p>lock 指令 </p>
-<ul>
-<li>写屏障 -强制刷新缓存中的数据到内存中。</li>
-<li>读屏障-强制放弃内存中的数据，读取主存中的数据</li>
-</ul>
-<h3 id="jmm是如何实现可见性和有序性的"><a href="#jmm是如何实现可见性和有序性的" class="headerlink" title="jmm是如何实现可见性和有序性的"></a>jmm是如何实现可见性和有序性的</h3><p>volatile 内存屏障，四种编译器级别的内存屏障，解决可见性问题。cpu级别的内存屏障，强制刷新storebuffer中的数据到主存中。解决了cpu层面的重排序问题。</p>
-<p>sychronized 在释放锁的时候，强制刷新工作内存中的数据到主存中，解决了可见性问题。但是没有解决指令的重排序。</p>
-<p>final后面加了一个write write 屏障。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/12/多线程系列-volatile/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-并发编程系列-condition" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/11/并发编程系列-condition/">并发编程系列-condition</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/11/并发编程系列-condition/" class="archive-article-date">
-  	<time datetime="2019-08-11T12:16:54.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-11</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h3><ul>
-<li>需求：juc 包中的wait 和 notify</li>
-<li>解决方案 ： condition</li>
-<li>应用：生产者消费者模型</li>
-<li>原理：基于等待队列</li>
-</ul>
-<h3 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//condition.wait</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			lock.lock();</span><br><span class="line">			System.out.println(<span class="string">"await --- begin"</span>);</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				condition.await(); <span class="comment">//当前线程等待</span></span><br><span class="line">			&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">				e.printStackTrace();</span><br><span class="line">			&#125;</span><br><span class="line">			System.out.println(<span class="string">"await -- end"</span>);</span><br><span class="line"></span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			lock.unlock();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//condition.signal</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			lock.lock();</span><br><span class="line">			System.out.println(<span class="string">"await --- begin"</span>);</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				condition.signal();<span class="comment">//唤醒使用当前锁线程wait的线程。</span></span><br><span class="line">			&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">				e.printStackTrace();</span><br><span class="line">			&#125;</span><br><span class="line">			System.out.println(<span class="string">"await -- end"</span>);</span><br><span class="line"></span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			lock.unlock();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>awaitThread 线程 执行lock.lock 获取锁后，使用condition.await使得当前线程放弃锁。进入到了等待队列中。另一个线程</p>
-<p>signalThread 线程执行lock.lock 获取锁后，执行condition.signal使得awaitThread有机会进入到同步队列中。当singalThread执行lock.unlock后，释放锁。awaitThread有机会从同步队列中获取到lock。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">condition</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/11/并发编程系列-condition/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-并发编程系列-lock" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/10/并发编程系列-lock/">并发编程系列-lock</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/10/并发编程系列-lock/" class="archive-article-date">
-  	<time datetime="2019-08-10T15:04:43.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-10</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h3><ul>
-<li>需求：锁的控制更加灵活，sychronized 等结束后自动释放锁，不能手动释放</li>
-<li>解决方式 lock 接口</li>
-<li>应用  lock.lock  lock.unlock</li>
-<li>原理 基于AQS的同步队列（双向链表）</li>
-</ul>
-<h3 id="什么是lock？"><a href="#什么是lock？" class="headerlink" title="什么是lock？"></a>什么是lock？</h3><p>java.util.current 包下面的一个接口。定义了获取锁 。lock.lock 和lock.unlock 等方法</p>
-<ul>
-<li>ReentrantLock 重入锁，同一个线程，再次获取相同的锁的时候，不会阻塞导致死锁的机制。</li>
-<li>ReentrantReadWriteLcok 读写锁。共享读，排他写。提高了并发的吞吐量。</li>
-</ul>
-<h3 id="什么是AQS"><a href="#什么是AQS" class="headerlink" title="什么是AQS?"></a>什么是AQS?</h3><p>同步队列。是一个双向的链表，当线程获取锁失败的时候，会封装成node 节点，添加到链表中，当获取锁的线程释放锁的时候。从队列中唤醒一个线程。</p>
-<h3 id="AQS-底层原理"><a href="#AQS-底层原理" class="headerlink" title="AQS 底层原理"></a>AQS 底层原理</h3><p>以非公平锁为例</p>
-<ul>
-<li><p>获取锁资源</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">void</span> <span class="title">lock</span><span class="params">()</span> </span>&#123;</span><br><span class="line">           <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, <span class="number">1</span>))<span class="comment">//CAS 操作，compare and case 判断state是不是可以被改为1</span></span><br><span class="line">               setExclusiveOwnerThread(Thread.currentThread());<span class="comment">//设置正在执行的线程为当前线程</span></span><br><span class="line">           <span class="keyword">else</span></span><br><span class="line">               acquire(<span class="number">1</span>); <span class="comment">//获取锁资源失败，竞争锁</span></span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
-
-<p>知识点 cas 乐观锁，原子性操作</p>
-<p>unsafe包中的 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unsafe.compareAndSwapInt(<span class="keyword">this</span>, stateOffset, expect, update);<span class="comment">//获取state属性的值，将0改为1是成功</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>2.tryAcquire（）尝试获取锁</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">nonfairTryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">final</span> Thread current = Thread.currentThread();</span><br><span class="line">            <span class="keyword">int</span> c = getState();<span class="comment">//获取state</span></span><br><span class="line">            <span class="keyword">if</span> (c == <span class="number">0</span>) &#123;<span class="comment">//0  再次尝试换取锁 公平锁和非公平锁在此有区别</span></span><br><span class="line">                <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, acquires)) &#123;</span><br><span class="line">                    setExclusiveOwnerThread(current);</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) &#123; <span class="comment">//cas中存放的是当前线程</span></span><br><span class="line">                <span class="keyword">int</span> nextc = c + acquires;</span><br><span class="line">                <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>) <span class="comment">// overflow</span></span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);</span><br><span class="line">                setState(nextc); <span class="comment">//state 累加</span></span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>; </span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>addWatier 添加到队列中，将当前前线挂起。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//组装成要给带有 head and tail的双向链表</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Node <span class="title">addWaiter</span><span class="params">(Node mode)</span> </span>&#123;</span><br><span class="line">        Node node = <span class="keyword">new</span> Node(Thread.currentThread(), mode);</span><br><span class="line">        <span class="comment">// Try the fast path of enq; backup to full enq on failure</span></span><br><span class="line">        Node pred = tail;</span><br><span class="line">        <span class="keyword">if</span> (pred != <span class="keyword">null</span>) &#123;</span><br><span class="line">            node.prev = pred;</span><br><span class="line">            <span class="keyword">if</span> (compareAndSetTail(pred, node)) &#123; </span><br><span class="line">                pred.next = node;</span><br><span class="line">                <span class="keyword">return</span> node;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        enq(node);</span><br><span class="line">        <span class="keyword">return</span> node;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>线程的挂起</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">parkAndCheckInterrupt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       LockSupport.park(<span class="keyword">this</span>); <span class="comment">//线程被挂起，处于waiting状态。一直卡在这儿。</span></span><br><span class="line">       <span class="keyword">return</span> Thread.interrupted();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-</li>
-</ul>
-<h3 id="锁的释放流程"><a href="#锁的释放流程" class="headerlink" title="锁的释放流程"></a>锁的释放流程</h3><p>  双向链表的头节点指向下一个。唤醒。唤醒前要state的值变为1.</p>
-<h3 id="公平锁和非公平锁的区别"><a href="#公平锁和非公平锁的区别" class="headerlink" title="公平锁和非公平锁的区别"></a>公平锁和非公平锁的区别</h3><ul>
-<li>非公平锁在获取锁的时候，会cas的方式来进行抢占。</li>
-<li>公平锁，只要双向链表中有了节点后，就会往tail节点的位置放。</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/10/并发编程系列-lock/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-mysql系列-优化" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/09/mysql系列-优化/">mysql系列-优化</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/09/mysql系列-优化/" class="archive-article-date">
-  	<time datetime="2019-08-09T09:10:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-09</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="性能分析"><a href="#性能分析" class="headerlink" title="性能分析"></a>性能分析</h3><ul>
-<li>慢查询定位（看慢查询日志）</li>
-<li>explian 执行计划分析</li>
-<li>优化sql</li>
-</ul>
-<h3 id="服务器层面的优化"><a href="#服务器层面的优化" class="headerlink" title="服务器层面的优化"></a>服务器层面的优化</h3><ul>
-<li>加到缓存 buffer pool</li>
-<li>降低磁盘的io写入 redo log的 写入方式 0 ，1，2 </li>
-<li>硬件层面 提高磁盘的读写</li>
-</ul>
-<h3 id="sql层面的优化"><a href="#sql层面的优化" class="headerlink" title="sql层面的优化"></a>sql层面的优化</h3><ul>
-<li><p>索引方面  组合 索引  索引下推  索引覆盖 等</p>
-</li>
-<li><p>limit 的优化 。使用order by id 来使用索引 limit会中断全表扫描的 。或者where的过滤条件</p>
-</li>
-<li><p>count（<em>*） 使用 count（列） 其实没啥区别 在innodb上count(</em>)的时候也会使用查询优化器找到对应的某个索引去做查询。</p>
-</li>
-</ul>
-<h3 id="mysql-集群"><a href="#mysql-集群" class="headerlink" title="mysql 集群"></a>mysql 集群</h3><ul>
-<li><p>主从复制 （讲主节点的数据复制到从节点）</p>
-</li>
-<li><p>原理（从节点两个线程 一个 io thread 读取binlog中的日志，放到 relaylog中，sqlthread从 relay中读取数据</p>
-</li>
-<li><p>从节点配置了读取哪个日志了。所以每次重启都需要读取的是新的 bin日志。</p>
-</li>
-<li><p>之前的数据使用 mysqldump 来进行复制</p>
-</li>
-</ul>
-<h3 id="读写分离"><a href="#读写分离" class="headerlink" title="读写分离"></a>读写分离</h3><ul>
-<li><p>主 读写操作</p>
-</li>
-<li><p>从  读操作</p>
-<h3 id="分库分表"><a href="#分库分表" class="headerlink" title="分库分表"></a>分库分表</h3></li>
-<li><p>分库 垂直切分（根据模块切分，将不同的模块分到不同的库中）</p>
-</li>
-<li><p>分表</p>
-<ul>
-<li>水平切分 row切分<ul>
-<li>根据id hash 切分</li>
-<li>根据范围切分</li>
-<li>根据日期切分</li>
-</ul>
-</li>
-<li>垂直切分 根据字段切分，100个字段，切分为多个字段的小表。</li>
-</ul>
-</li>
-</ul>
-<h3 id="分布式存在的问题"><a href="#分布式存在的问题" class="headerlink" title="分布式存在的问题"></a>分布式存在的问题</h3><ul>
-<li><p>分布式事务</p>
-</li>
-<li><p>分布式主键</p>
-</li>
-<li><p>分布式跨库join问题</p>
-</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/09/mysql系列-优化/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
     </nav>
   
 
@@ -1421,19 +1353,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1441,23 +1365,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1469,7 +1385,23 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1493,10 +1425,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
@@ -1505,11 +1433,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1525,51 +1457,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1585,7 +1473,59 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
             
             <div class="clearfix"></div>

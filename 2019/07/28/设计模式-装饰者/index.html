@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="与适配器模式区别装饰者模式代理类和目标类都实现了相同的接口 适配器是将一个接口通过适配器适配成另一个接口类型 接口123public interface PhoneInterface &amp;#123;	void call();&amp;#125;  source 目标类1234567public class IPhone implements PhoneInterface &amp;#123;	@Override	p">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-28T14:24:47.370Z">
+<meta property="og:updated_time" content="2019-08-29T06:17:31.150Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式-装饰者">
 <meta name="twitter:description" content="与适配器模式区别装饰者模式代理类和目标类都实现了相同的接口 适配器是将一个接口通过适配器适配成另一个接口类型 接口123public interface PhoneInterface &amp;#123;	void call();&amp;#125;  source 目标类1234567public class IPhone implements PhoneInterface &amp;#123;	@Override	p">
@@ -185,6 +185,10 @@
 
 <h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DesignPatternDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		PhoneInterface phone = <span class="keyword">new</span> IPhone();</span><br><span class="line">		phone.call();</span><br><span class="line">		</span><br><span class="line">		System.out.println(<span class="string">"==========="</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="comment">//Phone phone2 = new PhoneDecorate(new IPhone());</span></span><br><span class="line">		PhoneInterface phone2 = <span class="keyword">new</span> IPhoneDecorate(phone);</span><br><span class="line">		phone2.call();</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<h3 id="装饰者注意事项"><a href="#装饰者注意事项" class="headerlink" title="装饰者注意事项"></a>装饰者注意事项</h3><ul>
+<li>通过继承的方式不能有很好的扩展性</li>
+<li>可以通过装饰者模式，实现任意的组合。</li>
+</ul>
 
       
 
@@ -426,19 +430,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -446,23 +442,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -474,7 +462,23 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -498,10 +502,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
@@ -510,11 +510,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -530,51 +534,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -590,7 +550,59 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
             
             <div class="clearfix"></div>

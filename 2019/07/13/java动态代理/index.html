@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="什么是动态代理？在不改变目标对象的前提下，对目标对象进行增强。使用代理对象增强目标对象。在调用目标对象前后，进行增强功能， 增强代码需要我们手动编写。 动态代理产生的过程创建一个代理对象工厂来生成代理对象。 123456789101112131415161718192021222324252627public class JdkFactory &amp;#123;	// 根据目标对象生成代理对象	priv">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-07-13T03:05:08.077Z">
+<meta property="og:updated_time" content="2019-08-25T08:48:09.877Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java动态代理">
 <meta name="twitter:description" content="什么是动态代理？在不改变目标对象的前提下，对目标对象进行增强。使用代理对象增强目标对象。在调用目标对象前后，进行增强功能， 增强代码需要我们手动编写。 动态代理产生的过程创建一个代理对象工厂来生成代理对象。 123456789101112131415161718192021222324252627public class JdkFactory &amp;#123;	// 根据目标对象生成代理对象	priv">
@@ -199,6 +199,8 @@
 
 <h3 id="生成的字节码文件"><a href="#生成的字节码文件" class="headerlink" title="生成的字节码文件"></a>生成的字节码文件</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//看到了继承父类</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserServiceImpl</span>$$<span class="title">EnhancerByCGLIB</span>$$3845<span class="title">b6a0</span> <span class="keyword">extends</span> <span class="title">UserServiceImpl</span> <span class="keyword">implements</span> <span class="title">Factory</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   </span><br><span class="line">   </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">Save</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        MethodInterceptor cglib$CALLBACK_2;</span><br><span class="line">        MethodInterceptor cglib$CALLBACK_0;</span><br><span class="line">        <span class="keyword">if</span> ((cglib$CALLBACK_0 = (cglib$CALLBACK_2 = <span class="keyword">this</span>.CGLIB$CALLBACK_0)) == <span class="keyword">null</span>) &#123;</span><br><span class="line">            CGLIB$BIND_CALLBACKS(<span class="keyword">this</span>);</span><br><span class="line">            cglib$CALLBACK_2 = (cglib$CALLBACK_0 = <span class="keyword">this</span>.CGLIB$CALLBACK_0);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//调用了增强器的invoke方法</span></span><br><span class="line">        <span class="keyword">if</span> (cglib$CALLBACK_0 != <span class="keyword">null</span>) &#123;</span><br><span class="line">            cglib$CALLBACK_2.intercept((Object)<span class="keyword">this</span>, UserServiceImpl$$EnhancerByCGLIB$$<span class="number">3845</span>b6a0.CGLIB$Save$<span class="number">0</span>$Method, UserServiceImpl$$EnhancerByCGLIB$$<span class="number">3845</span>b6a0.CGLIB$emptyArgs, UserServiceImpl$$EnhancerByCGLIB$$<span class="number">3845</span>b6a0.CGLIB$Save$<span class="number">0</span>$Proxy);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">super</span>.Save();<span class="comment">//调用了父类的save方法</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
+<p>动态代理和静态代理区别：<br> 静态代理每次目标类添加方法的时候，代理类对应都要添加，不符合开闭原则<br> 动态代理是动态的去生成代码的方式，我们不用手动去改代理类。符合开闭原则。反射执行方法效率低</p>
+<p>cglib 和 jdk 的动态代理区别：<br>    cgib 动态代码 生成代码类 是通过继承目标类的方法<br>    jdk 生成带来类是根据目标类实现的接口来重写方法<br>    cglib 生成字节码的时候，效率低。但是执行的时候效率高<br>    jdk 生成字节码效率高，但是需要反射执行目标方法，效率低</p>
 
       
 
@@ -440,19 +442,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -460,23 +454,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -488,7 +474,23 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -512,10 +514,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
@@ -524,11 +522,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -544,51 +546,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -604,7 +562,59 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
             
             <div class="clearfix"></div>

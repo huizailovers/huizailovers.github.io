@@ -152,6 +152,626 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-设计模式-静态代理" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/28/设计模式-静态代理/">设计模式-静态代理</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/28/设计模式-静态代理/" class="archive-article-date">
+  	<time datetime="2019-07-28T14:20:08.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-28</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="静态代理和装饰者区别"><a href="#静态代理和装饰者区别" class="headerlink" title="静态代理和装饰者区别"></a>静态代理和装饰者区别</h3><ul>
+<li><p>静态代理，代理的是某个具体的类</p>
+</li>
+<li><p>装饰者模式，装饰的是接口下所有的实现类</p>
+<h3 id="source-目标类"><a href="#source-目标类" class="headerlink" title="source 目标类"></a>source 目标类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Source</span> <span class="keyword">implements</span> <span class="title">SourceableProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"source method"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="proxy-代理类"><a href="#proxy-代理类" class="headerlink" title="proxy 代理类"></a>proxy 代理类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Proxy</span> <span class="keyword">implements</span> <span class="title">SourceableProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Source source;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">Proxy</span><span class="params">(Source source)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.source = source;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"代理一下"</span>);</span><br><span class="line">		source.method();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		SourceableProxy spProxy = <span class="keyword">new</span> Proxy(<span class="keyword">new</span> Source());</span><br><span class="line">		spProxy.method();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">静态代理</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/28/设计模式-静态代理/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-设计模式-装饰者" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/28/设计模式-装饰者/">设计模式-装饰者</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/28/设计模式-装饰者/" class="archive-article-date">
+  	<time datetime="2019-07-28T14:08:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-28</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="与适配器模式区别"><a href="#与适配器模式区别" class="headerlink" title="与适配器模式区别"></a>与适配器模式区别</h3><p>装饰者模式代理类和目标类都实现了相同的接口</p>
+<p>适配器是将一个接口通过适配器适配成另一个接口类型</p>
+<h3 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PhoneInterface</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">call</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="source-目标类"><a href="#source-目标类" class="headerlink" title="source 目标类"></a>source 目标类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IPhone</span> <span class="keyword">implements</span> <span class="title">PhoneInterface</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"使用苹果手机打电话"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="装饰者"><a href="#装饰者" class="headerlink" title="装饰者"></a>装饰者</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IPhoneDecorate</span> <span class="keyword">implements</span> <span class="title">PhoneInterface</span></span>&#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//被装饰的类的实例，该实例由外部传入</span></span><br><span class="line">	<span class="keyword">private</span> PhoneInterface phone;</span><br><span class="line">	<span class="comment">//通过构造方法传入被装饰类的实例</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">IPhoneDecorate</span><span class="params">(PhoneInterface phone)</span></span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.phone = phone;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//对被装饰类的打电话功能进行装饰，使其功能增强</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">//依然使用的是被装饰类的手机去打电话</span></span><br><span class="line">		phone.call();</span><br><span class="line">		<span class="comment">// 通过装饰扩展的新功能</span></span><br><span class="line">		System.out.println(<span class="string">"听音乐"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DesignPatternDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		PhoneInterface phone = <span class="keyword">new</span> IPhone();</span><br><span class="line">		phone.call();</span><br><span class="line">		</span><br><span class="line">		System.out.println(<span class="string">"==========="</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="comment">//Phone phone2 = new PhoneDecorate(new IPhone());</span></span><br><span class="line">		PhoneInterface phone2 = <span class="keyword">new</span> IPhoneDecorate(phone);</span><br><span class="line">		phone2.call();</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="装饰者注意事项"><a href="#装饰者注意事项" class="headerlink" title="装饰者注意事项"></a>装饰者注意事项</h3><ul>
+<li>通过继承的方式不能有很好的扩展性</li>
+<li>可以通过装饰者模式，实现任意的组合。</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">装饰者模式</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/28/设计模式-装饰者/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-springmvc源码解析-springmvc执行流程" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/26/springmvc源码解析-springmvc执行流程/">springmvc源码解析-springmvc执行流程</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/26/springmvc源码解析-springmvc执行流程/" class="archive-article-date">
+  	<time datetime="2019-07-26T02:52:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-26</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="入口-DispacherServlet-doService"><a href="#入口-DispacherServlet-doService" class="headerlink" title="入口 DispacherServlet#doService()"></a>入口 DispacherServlet#doService()</h3><p>doService()调用doDispatch()</p>
+<ul>
+<li>根据处理器映射器找到对应的处理器handler</li>
+<li>找到对应的处理器适配器</li>
+<li>处理器适配器执行handler处理器</li>
+<li>试图解析器解析ModleAndView 获取 视图对象view</li>
+<li>进行视图渲染</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doDispatch</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		HttpServletRequest processedRequest = request;</span><br><span class="line">		HandlerExecutionChain mappedHandler = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">boolean</span> multipartRequestParsed = <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line">		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			ModelAndView mv = <span class="keyword">null</span>;</span><br><span class="line">			Exception dispatchException = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="comment">// 处理文件上传的request请求</span></span><br><span class="line">				processedRequest = checkMultipart(request);</span><br><span class="line">				multipartRequestParsed = (processedRequest != request);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Determine handler for the current request.</span></span><br><span class="line">				<span class="comment">// 通过处理器映射器HandlerMapping，获取handler处理器执行链，该执行链封装了处理器和对应该处理器的拦截器（可能有多个）</span></span><br><span class="line">				<span class="comment">// 需要注意的是@Controller注解的类，它不是我们这里要查找的处理器，我们要查找的处理器是@RequestMapping对应的方法，这个方法会封装到HandlerMethod类中</span></span><br><span class="line">				mappedHandler = getHandler(processedRequest);</span><br><span class="line">				<span class="keyword">if</span> (mappedHandler == <span class="keyword">null</span>) &#123;</span><br><span class="line">					noHandlerFound(processedRequest, response);</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Determine handler adapter for the current request.</span></span><br><span class="line">				<span class="comment">// 通过找到的handler处理器，去匹配合适的处理器适配器HandlerAdapter</span></span><br><span class="line">				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Process last-modified header, if supported by the handler.</span></span><br><span class="line">				String method = request.getMethod();</span><br><span class="line">				<span class="keyword">boolean</span> isGet = <span class="string">"GET"</span>.equals(method);</span><br><span class="line">				<span class="keyword">if</span> (isGet || <span class="string">"HEAD"</span>.equals(method)) &#123;</span><br><span class="line">					<span class="keyword">long</span> lastModified = ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line">					<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">						logger.debug(<span class="string">"Last-Modified value for ["</span> + getRequestUri(request) + <span class="string">"] is: "</span> + lastModified);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="keyword">if</span> (<span class="keyword">new</span> ServletWebRequest(request, response).checkNotModified(lastModified) &amp;&amp; isGet) &#123;</span><br><span class="line">						<span class="keyword">return</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// 执行拦截器(interceptor)的preHandle方法（拦截器自定义实现）</span></span><br><span class="line">				<span class="keyword">if</span> (!mappedHandler.applyPreHandle(processedRequest, response)) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// Actually invoke the handler.</span></span><br><span class="line">				<span class="comment">// 通过处理器适配器，真正调用处理器方法</span></span><br><span class="line">				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">					<span class="keyword">return</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">// 设置默认视图名称</span></span><br><span class="line">				applyDefaultViewName(processedRequest, mv);</span><br><span class="line">				<span class="comment">// 执行拦截器(interceptor)的postHandle方法</span></span><br><span class="line">				mappedHandler.applyPostHandle(processedRequest, response, mv);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">				dispatchException = ex;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">				<span class="comment">// As of 4.3, we're processing Errors thrown from handler methods as well,</span></span><br><span class="line">				<span class="comment">// making them available for @ExceptionHandler methods and other scenarios.</span></span><br><span class="line">				dispatchException = <span class="keyword">new</span> NestedServletException(<span class="string">"Handler dispatch failed"</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 处理调度结果（也就是ModelAndView对象）</span></span><br><span class="line">			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			<span class="comment">// 执行拦截器(interceptor)的afterCompletion方法</span></span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Throwable err) &#123;</span><br><span class="line">			<span class="comment">// 执行拦截器(interceptor)的afterCompletion方法</span></span><br><span class="line">			triggerAfterCompletion(processedRequest, response, mappedHandler,</span><br><span class="line">					<span class="keyword">new</span> NestedServletException(<span class="string">"Handler processing failed"</span>, err));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> (asyncManager.isConcurrentHandlingStarted()) &#123;</span><br><span class="line">				<span class="comment">// Instead of postHandle and afterCompletion</span></span><br><span class="line">				<span class="keyword">if</span> (mappedHandler != <span class="keyword">null</span>) &#123;</span><br><span class="line">					mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Clean up any resources used by a multipart request.</span></span><br><span class="line">				<span class="keyword">if</span> (multipartRequestParsed) &#123;</span><br><span class="line">					cleanupMultipart(processedRequest);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="RequestMappingHandlerMapping执行流程"><a href="#RequestMappingHandlerMapping执行流程" class="headerlink" title="RequestMappingHandlerMapping执行流程"></a>RequestMappingHandlerMapping执行流程</h3><ul>
+<li><p>根据url 找到对应的requestMappingInfo（多个）</p>
+</li>
+<li><p>根据request请求找到对应的requestMappingInfo（单个）</p>
+</li>
+<li><p>根据requestMappingInfo 找到对应的handlerMethod</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> HandlerMethod <span class="title">lookupHandlerMethod</span><span class="params">(String lookupPath, HttpServletRequest request)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		List&lt;Match&gt; matches = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">		<span class="comment">// 根据查找路径（URL）去urlLookup集合中获取匹配到的RequestMappingInfo集合</span></span><br><span class="line">		List&lt;T&gt; directPathMatches = <span class="keyword">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">		<span class="keyword">if</span> (directPathMatches != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 将RequestMappingInfo对象和HandlerMethod对象进行匹配，将匹配到的信息封装到Match对象，再将Match对象放入matches集合</span></span><br><span class="line">			addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (matches.isEmpty()) &#123;</span><br><span class="line">			<span class="comment">// No choice but to go through all mappings...</span></span><br><span class="line">			addMatchingMappings(<span class="keyword">this</span>.mappingRegistry.getMappings().keySet(), matches, request);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!matches.isEmpty()) &#123;</span><br><span class="line">			Comparator&lt;Match&gt; comparator = <span class="keyword">new</span> MatchComparator(getMappingComparator(request));</span><br><span class="line">			<span class="comment">// 使用指定的比较器，将匹配到的Match对象进行排序</span></span><br><span class="line">			matches.sort(comparator);</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(<span class="string">"Found "</span> + matches.size() + <span class="string">" matching mapping(s) for ["</span> + lookupPath + <span class="string">"] : "</span> + matches);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 找到最优匹配项</span></span><br><span class="line">			Match bestMatch = matches.get(<span class="number">0</span>);</span><br><span class="line">			<span class="keyword">if</span> (matches.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">					<span class="keyword">return</span> PREFLIGHT_AMBIGUOUS_MATCH;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">// 获取次优匹配项</span></span><br><span class="line">				Match secondBestMatch = matches.get(<span class="number">1</span>);</span><br><span class="line">				<span class="comment">// 如果最优匹配项和次优匹配项是相同的，则报错</span></span><br><span class="line">				<span class="keyword">if</span> (comparator.compare(bestMatch, secondBestMatch) == <span class="number">0</span>) &#123;</span><br><span class="line">					Method m1 = bestMatch.handlerMethod.getMethod();</span><br><span class="line">					Method m2 = secondBestMatch.handlerMethod.getMethod();</span><br><span class="line">					<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Ambiguous handler methods mapped for HTTP path '"</span> +</span><br><span class="line">							request.getRequestURL() + <span class="string">"': &#123;"</span> + m1 + <span class="string">", "</span> + m2 + <span class="string">"&#125;"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			handleMatch(bestMatch.mapping, lookupPath, request);</span><br><span class="line">			<span class="comment">// 返回最匹配的HandlerMethod对象</span></span><br><span class="line">			<span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> handleNoMatch(<span class="keyword">this</span>.mappingRegistry.getMappings().keySet(), lookupPath, request);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+<h3 id="RequestMappingHandlerAdapter执行流程"><a href="#RequestMappingHandlerAdapter执行流程" class="headerlink" title="RequestMappingHandlerAdapter执行流程"></a>RequestMappingHandlerAdapter执行流程</h3><ul>
+<li><p>参数绑定流程</p>
+</li>
+<li><p>返回值处理流程</p>
+</li>
+</ul>
+<p>  入口invokeHandlerMethod</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">invokeAndHandle</span><span class="params">(ServletWebRequest webRequest, ModelAndViewContainer mavContainer,</span></span></span><br><span class="line"><span class="function"><span class="params">			Object... providedArgs)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 执行参数解析流程、HandlerMethod处理流程，并返回结果</span></span><br><span class="line">		Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs);</span><br><span class="line">		setResponseStatus(webRequest);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (returnValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">if</span> (isRequestNotModified(webRequest) || getResponseStatus() != <span class="keyword">null</span> || mavContainer.isRequestHandled()) &#123;</span><br><span class="line">				mavContainer.setRequestHandled(<span class="keyword">true</span>);</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (StringUtils.hasText(getResponseStatusReason())) &#123;</span><br><span class="line">			mavContainer.setRequestHandled(<span class="keyword">true</span>);</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		mavContainer.setRequestHandled(<span class="keyword">false</span>);</span><br><span class="line">		Assert.state(<span class="keyword">this</span>.returnValueHandlers != <span class="keyword">null</span>, <span class="string">"No return value handlers"</span>);</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="comment">// 执行返回值解析流程（主要了解ResponseBody注解修饰的返回值解析）</span></span><br><span class="line">			<span class="keyword">this</span>.returnValueHandlers.handleReturnValue(</span><br><span class="line">					returnValue, getReturnValueType(returnValue), mavContainer, webRequest);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">				logger.trace(getReturnValueHandlingErrorMessage(<span class="string">"Error handling return value"</span>, returnValue), ex);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">throw</span> ex;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//解析方法参数，进行转换，反射执行handlerMethod方法</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invokeForRequest</span><span class="params">(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer,</span></span></span><br><span class="line"><span class="function"><span class="params">			Object... providedArgs)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 获取方法参数值（这一步也是从request中将参数解析出来的过程）--已经进行类型转换了</span></span><br><span class="line">		Object[] args = getMethodArgumentValues(request, mavContainer, providedArgs);</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">"Invoking '"</span> + ClassUtils.getQualifiedMethodName(getMethod(), getBeanType()) +</span><br><span class="line">					<span class="string">"' with arguments "</span> + Arrays.toString(args));</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 执行HandlerMethod方法，并获取返回值（也就是执行Controller类中的方法）</span></span><br><span class="line">		Object returnValue = doInvoke(args);</span><br><span class="line">		<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">			logger.trace(<span class="string">"Method ["</span> + ClassUtils.getQualifiedMethodName(getMethod(), getBeanType()) +</span><br><span class="line">					<span class="string">"] returned ["</span> + returnValue + <span class="string">"]"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> returnValue;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">springmvc 执行流程</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/26/springmvc源码解析-springmvc执行流程/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-springmvc源码解析-springmvc初始化流程" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/26/springmvc源码解析-springmvc初始化流程/">springmvc源码解析-springmvc初始化流程</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/26/springmvc源码解析-springmvc初始化流程/" class="archive-article-date">
+  	<time datetime="2019-07-26T02:51:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-26</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="mvc"><a href="#mvc" class="headerlink" title="mvc"></a>mvc</h3><ul>
+<li><p>M model 指的是 业务模型 handler（controller中的方法）</p>
+</li>
+<li><p>V  view  视图</p>
+</li>
+<li><p>C 前端控制器 DispatcherServlet（接收请求，分发请求（查找处理器，执行处理器），响应结果）</p>
+</li>
+</ul>
+<h3 id="其他组件"><a href="#其他组件" class="headerlink" title="其他组件"></a>其他组件</h3><ul>
+<li><p>处理器映射器 （handlerMapping 建立请求和handler处理器的关系，根据请求查找处理器）</p>
+</li>
+<li><p>处理器适配器 （handlerAdatper 适配，执行处理器，返回ModelAndView）</p>
+</li>
+<li><p>试图解析器  （viewResolver 根据视图名称解析出视图对象）</p>
+</li>
+</ul>
+<h3 id="初始化流程"><a href="#初始化流程" class="headerlink" title="初始化流程"></a>初始化流程</h3><ul>
+<li><p>init流程</p>
+<ul>
+<li><p>创建webApplicationContext容器</p>
+</li>
+<li><p>刷新容器中的策略</p>
+</li>
+</ul>
+<p>具体代码 入口 FrameWokrApplicationContext#initWebApplicationContext()</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> WebApplicationContext <span class="title">initWebApplicationContext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		WebApplicationContext rootContext = WebApplicationContextUtils.getWebApplicationContext(getServletContext());</span><br><span class="line">		WebApplicationContext wac = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.webApplicationContext != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// A context instance was injected at construction time -&gt; use it</span></span><br><span class="line">			wac = <span class="keyword">this</span>.webApplicationContext;</span><br><span class="line">			<span class="keyword">if</span> (wac <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) &#123;</span><br><span class="line">				ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) wac;</span><br><span class="line">				<span class="keyword">if</span> (!cwac.isActive()) &#123;</span><br><span class="line">					<span class="keyword">if</span> (cwac.getParent() == <span class="keyword">null</span>) &#123;</span><br><span class="line">						cwac.setParent(rootContext);</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="comment">// 配置和刷新容器(调用到了AbtstartApplicationContext#refresh（）)</span></span><br><span class="line">					configureAndRefreshWebApplicationContext(cwac);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (wac == <span class="keyword">null</span>) &#123;</span><br><span class="line">			wac = findWebApplicationContext();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (wac == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// No context instance is defined for this servlet -&gt; create a local one</span></span><br><span class="line">			wac = createWebApplicationContext(rootContext);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.refreshEventReceived) &#123;</span><br><span class="line">			<span class="comment">// 刷新容器中的策略</span></span><br><span class="line">			onRefresh(wac);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.publishContext) &#123;</span><br><span class="line">			<span class="comment">// Publish the context as a servlet context attribute.</span></span><br><span class="line">			String attrName = getServletContextAttributeName();</span><br><span class="line">			<span class="comment">// 将spring容器存入到ServletContext上下文</span></span><br><span class="line">			getServletContext().setAttribute(attrName, wac);</span><br><span class="line">			<span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">				<span class="keyword">this</span>.logger.debug(<span class="string">"Published WebApplicationContext of servlet '"</span> + getServletName()</span><br><span class="line">						+ <span class="string">"' as ServletContext attribute with name ["</span> + attrName + <span class="string">"]"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> wac;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>刷新容器中的策略(DispatcherServlet#onRefresh)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initStrategies</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 初始化多部件解析器</span></span><br><span class="line">		initMultipartResolver(context);</span><br><span class="line">		<span class="comment">// 初始化国际化解析器</span></span><br><span class="line">		initLocaleResolver(context);</span><br><span class="line">		<span class="comment">// 初始化主题解析器</span></span><br><span class="line">		initThemeResolver(context);</span><br><span class="line">		<span class="comment">// 初始化处理器映射器</span></span><br><span class="line">		initHandlerMappings(context);</span><br><span class="line">		<span class="comment">// 初始化处理器适配器</span></span><br><span class="line">		initHandlerAdapters(context);</span><br><span class="line">		<span class="comment">// 初始化异常解析器</span></span><br><span class="line">		initHandlerExceptionResolvers(context);</span><br><span class="line">		initRequestToViewNameTranslator(context);</span><br><span class="line">		<span class="comment">// 初始会视图解析器</span></span><br><span class="line">		initViewResolvers(context);</span><br><span class="line">		initFlashMapManager(context);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="handlerMapping的初始化策略"><a href="#handlerMapping的初始化策略" class="headerlink" title="handlerMapping的初始化策略"></a>handlerMapping的初始化策略</h3><p>入口 DispacterServlet#initHandlerMappings（）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initHandlerMappings</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.handlerMappings = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.detectAllHandlerMappings) &#123;</span><br><span class="line">			<span class="comment">// Find all HandlerMappings in the ApplicationContext, including ancestor contexts.</span></span><br><span class="line">			<span class="comment">// 从当前spring容器和其祖先容器中，查找到所有的处理器映射器,spirng容器中的mapping是根据配置那文件来的</span></span><br><span class="line">			Map&lt;String, HandlerMapping&gt; matchingBeans =</span><br><span class="line">					BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerMapping.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (!matchingBeans.isEmpty()) &#123;</span><br><span class="line">				<span class="keyword">this</span>.handlerMappings = <span class="keyword">new</span> ArrayList&lt;&gt;(matchingBeans.values());</span><br><span class="line">				<span class="comment">// We keep HandlerMappings in sorted order.</span></span><br><span class="line">				AnnotationAwareOrderComparator.sort(<span class="keyword">this</span>.handlerMappings);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				HandlerMapping hm = context.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);</span><br><span class="line">				<span class="keyword">this</span>.handlerMappings = Collections.singletonList(hm);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (NoSuchBeanDefinitionException ex) &#123;</span><br><span class="line">				<span class="comment">// Ignore, we'll add a default HandlerMapping later.</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.handlerMappings == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 如果没有从spring容器中获取到HandlerMapping，则从默认DispatcherServlet.properties文件中加载默认策略 </span></span><br><span class="line">        <span class="comment">//默认的策略有两个 RequestMappingHandlerMapping（注解处理器映射器）BeanNameUrlHandlerMapping（xml配置文件处理器映射器）</span></span><br><span class="line">			<span class="keyword">this</span>.handlerMappings = getDefaultStrategies(context, HandlerMapping.class);</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"No HandlerMappings found in servlet '"</span> + getServletName() + <span class="string">"': using default"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="handlerAdapter初始化策略"><a href="#handlerAdapter初始化策略" class="headerlink" title="handlerAdapter初始化策略"></a>handlerAdapter初始化策略</h3><p>同理，容器中没有的，则走默认的配置文件加载适配器策略</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initHandlerAdapters</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.handlerAdapters = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.detectAllHandlerAdapters) &#123;</span><br><span class="line">			<span class="comment">// Find all HandlerAdapters in the ApplicationContext, including ancestor contexts.</span></span><br><span class="line">			<span class="comment">// 从当前spring容器和其祖先容器中，查找到所有的处理器适配器</span></span><br><span class="line">			Map&lt;String, HandlerAdapter&gt; matchingBeans =</span><br><span class="line">					BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerAdapter.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">			<span class="keyword">if</span> (!matchingBeans.isEmpty()) &#123;</span><br><span class="line">				<span class="keyword">this</span>.handlerAdapters = <span class="keyword">new</span> ArrayList&lt;&gt;(matchingBeans.values());</span><br><span class="line">				<span class="comment">// We keep HandlerAdapters in sorted order.</span></span><br><span class="line">				AnnotationAwareOrderComparator.sort(<span class="keyword">this</span>.handlerAdapters);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				HandlerAdapter ha = context.getBean(HANDLER_ADAPTER_BEAN_NAME, HandlerAdapter.class);</span><br><span class="line">				<span class="keyword">this</span>.handlerAdapters = Collections.singletonList(ha);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (NoSuchBeanDefinitionException ex) &#123;</span><br><span class="line">				<span class="comment">// Ignore, we'll add a default HandlerAdapter later.</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// Ensure we have at least some HandlerAdapters, by registering</span></span><br><span class="line">		<span class="comment">// default HandlerAdapters if no other adapters are found.</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.handlerAdapters == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 如果没有从spring容器中获取到HandlerAdapter，则从默认DispatcherServlet.properties文件中加载默认策略</span></span><br><span class="line">			<span class="keyword">this</span>.handlerAdapters = getDefaultStrategies(context, HandlerAdapter.class);</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"No HandlerAdapters found in servlet '"</span> + getServletName() + <span class="string">"': using default"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="handlerMapping的初始化"><a href="#handlerMapping的初始化" class="headerlink" title="handlerMapping的初始化"></a>handlerMapping的初始化</h3><p>DispatcherServlet#createDefaultStrategy() 调用的是ioc初始化流程的creanBean（三步）</p>
+<p>在第三步，执行初始化方法的时候，分为两个步骤</p>
+<ul>
+<li>如果是InitializingBean接口的实现类，调用InitializingBean接口的afterPropertiesSet方法</li>
+<li>然后再初始化<bean>标签对应的init-method属性中的方法</bean></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">invokeInitMethods</span><span class="params">(String beanName, <span class="keyword">final</span> Object bean, @Nullable RootBeanDefinition mbd)</span></span></span><br><span class="line"><span class="function">			<span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">boolean</span> isInitializingBean = (bean <span class="keyword">instanceof</span> InitializingBean);</span><br><span class="line">		<span class="comment">// 如果是InitializingBean接口的实现类，则先初始化InitializingBean的实现类</span></span><br><span class="line">		<span class="keyword">if</span> (isInitializingBean &amp;&amp; (mbd == <span class="keyword">null</span> || !mbd.isExternallyManagedInitMethod(<span class="string">"afterPropertiesSet"</span>))) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(<span class="string">"Invoking afterPropertiesSet() on bean with name '"</span> + beanName + <span class="string">"'"</span>);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (System.getSecurityManager() != <span class="keyword">null</span>) &#123;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					AccessController.doPrivileged((PrivilegedExceptionAction&lt;Object&gt;) () -&gt; &#123;</span><br><span class="line">						((InitializingBean) bean).afterPropertiesSet();</span><br><span class="line">						<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">					&#125;, getAccessControlContext());</span><br><span class="line">				&#125; <span class="keyword">catch</span> (PrivilegedActionException pae) &#123;</span><br><span class="line">					<span class="keyword">throw</span> pae.getException();</span><br><span class="line">				&#125;</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// 调用InitializingBean接口的afterPropertiesSet方法</span></span><br><span class="line">				((InitializingBean) bean).afterPropertiesSet();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 然后再初始化&lt;bean&gt;标签对应的init-method属性中的方法</span></span><br><span class="line">		<span class="keyword">if</span> (mbd != <span class="keyword">null</span> &amp;&amp; bean.getClass() != NullBean.class) &#123;</span><br><span class="line">			String initMethodName = mbd.getInitMethodName();</span><br><span class="line">			<span class="keyword">if</span> (StringUtils.hasLength(initMethodName)</span><br><span class="line">					&amp;&amp; !(isInitializingBean &amp;&amp; <span class="string">"afterPropertiesSet"</span>.equals(initMethodName))</span><br><span class="line">					&amp;&amp; !mbd.isExternallyManagedInitMethod(initMethodName)) &#123;</span><br><span class="line">				<span class="comment">// 调用自定义的初始化方法</span></span><br><span class="line">				invokeCustomInitMethod(beanName, bean, mbd);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>handlerMapping实现了InitializingBean，重写了afterPropertiesSet方法</p>
+<p>RequestingMappingHandlerMapping 该方法的作用</p>
+<ul>
+<li>建立url和requestMappingInfo映射关系</li>
+<li>建立requestMappingInfo和HandlerMethod的映射关系</li>
+<li>目的：一个url对应多个requestMappingInfo request请求根据requestMappingInfo来定位HandlerMethod。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">detectHandlerMethods</span><span class="params">(<span class="keyword">final</span> Object handler)</span> </span>&#123;</span><br><span class="line">		Class&lt;?&gt; handlerType = (handler <span class="keyword">instanceof</span> String ? obtainApplicationContext().getType((String) handler)</span><br><span class="line">				: handler.getClass());</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (handlerType != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// 获取controller</span></span><br><span class="line">			<span class="keyword">final</span> Class&lt;?&gt; userType = ClassUtils.getUserClass(handlerType);</span><br><span class="line">			<span class="comment">// 获取所有method ，建立method和RequestMappingInfo 的映射信息</span></span><br><span class="line">			Map&lt;Method, T&gt; methods = MethodIntrospector.selectMethods(userType,</span><br><span class="line">					(MethodIntrospector.MetadataLookup&lt;T&gt;) method -&gt; getMappingForMethod(method, userType));</span><br><span class="line">			<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">				logger.debug(methods.size() + <span class="string">" request handler methods found on "</span> + userType + <span class="string">": "</span> + methods);</span><br><span class="line">			&#125;</span><br><span class="line">			methods.forEach((key, mapping) -&gt; &#123;</span><br><span class="line">				Method invocableMethod = AopUtils.selectInvocableMethod(key, userType);</span><br><span class="line">				<span class="comment">// 为啥这样设计？一个url 对应多个requestMappingInfo</span></span><br><span class="line">				<span class="comment">// （不同的请求方式）根据request请求参数找到对应的requestMappingInfo</span></span><br><span class="line">				<span class="comment">// 再找到对应的handlerMethod</span></span><br><span class="line">				<span class="comment">// 建立两个映射关系</span></span><br><span class="line">				<span class="comment">// handlerMethod 和 requestMappingInfo</span></span><br><span class="line">				<span class="comment">// url和 requestMappingInfo</span></span><br><span class="line">				registerHandlerMethod(handler, invocableMethod, mapping);</span><br><span class="line">			&#125;);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="RequestMappingHandlerAdapter初始化流程"><a href="#RequestMappingHandlerAdapter初始化流程" class="headerlink" title="RequestMappingHandlerAdapter初始化流程"></a>RequestMappingHandlerAdapter初始化流程</h3><ul>
+<li>初始化参数解析器</li>
+<li>初始化参数binder解析器（参数的类型转换）</li>
+<li>初始化返回值解析器</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// Do this first, it may add ResponseBody advice beans</span></span><br><span class="line">		<span class="comment">// 初始化Controller类通知缓存</span></span><br><span class="line">		initControllerAdviceCache();</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 初始化参数解析器</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.argumentResolvers == <span class="keyword">null</span>) &#123;</span><br><span class="line">			List&lt;HandlerMethodArgumentResolver&gt; resolvers = getDefaultArgumentResolvers();</span><br><span class="line">			<span class="keyword">this</span>.argumentResolvers = <span class="keyword">new</span> HandlerMethodArgumentResolverComposite().addResolvers(resolvers);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 初始化处理器Binder参数解析器</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.initBinderArgumentResolvers == <span class="keyword">null</span>) &#123;</span><br><span class="line">			List&lt;HandlerMethodArgumentResolver&gt; resolvers = getDefaultInitBinderArgumentResolvers();</span><br><span class="line">			<span class="keyword">this</span>.initBinderArgumentResolvers = <span class="keyword">new</span> HandlerMethodArgumentResolverComposite().addResolvers(resolvers);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 初始化处理器返回值解析器</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.returnValueHandlers == <span class="keyword">null</span>) &#123;</span><br><span class="line">			List&lt;HandlerMethodReturnValueHandler&gt; handlers = getDefaultReturnValueHandlers();</span><br><span class="line">			<span class="keyword">this</span>.returnValueHandlers = <span class="keyword">new</span> HandlerMethodReturnValueHandlerComposite().addHandlers(handlers);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">springmvc 初始化</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/26/springmvc源码解析-springmvc初始化流程/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-spring源码解析系列-AOP创建代理对象流程" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/24/spring源码解析系列-AOP创建代理对象流程/">spring源码解析系列-AOP创建代理对象流程</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/24/spring源码解析系列-AOP创建代理对象流程/" class="archive-article-date">
+  	<time datetime="2019-07-24T09:57:53.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="Aop动态执行流程"><a href="#Aop动态执行流程" class="headerlink" title="Aop动态执行流程"></a>Aop动态执行流程</h3><ul>
+<li>筛选合适的通知器</li>
+<li>创建代理对象</li>
+<li>执行invoke方法</li>
+</ul>
+<h3 id="筛选通知器流程步骤"><a href="#筛选通知器流程步骤" class="headerlink" title="筛选通知器流程步骤"></a>筛选通知器流程步骤</h3><ul>
+<li><p>为bean找到合适的通知器</p>
+</li>
+<li><p>如果通知器数组不为空，为bean生成代理对象，返回该对象</p>
+</li>
+<li><p>如果数组为空，返回原始的bean</p>
+</li>
+</ul>
+<p>###查找合适的通知器</p>
+<ul>
+<li><p>从容器中查找类型为Advisor类型的bean对应的名称</p>
+</li>
+<li><p>遍历AdvisorNames ，从容器中获取对应的bean</p>
+</li>
+<li><p>通过classFitler 和methodmatcher 来进行筛选。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取所有的advisor</span></span><br><span class="line"><span class="keyword">if</span> (advisorNames == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 从容器中查找 Advisor 类型 bean 的名称</span></span><br><span class="line">            advisorNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(</span><br><span class="line">                    <span class="keyword">this</span>.beanFactory, Advisor.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (advisorNames.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> LinkedList&lt;Advisor&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    List&lt;Advisor&gt; advisors = <span class="keyword">new</span> LinkedList&lt;Advisor&gt;();</span><br><span class="line">    <span class="comment">// 遍历 advisorNames</span></span><br><span class="line">    <span class="keyword">for</span> (String name : advisorNames) &#123;</span><br><span class="line">        <span class="keyword">if</span> (isEligibleBean(name)) &#123;</span><br><span class="line">            <span class="comment">// 忽略正在创建中的 advisor bean</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.beanFactory.isCurrentlyInCreation(name)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">                    logger.debug(<span class="string">"Skipping currently created advisor '"</span> + name + <span class="string">"'"</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">/*</span></span><br><span class="line"><span class="comment">                     * 调用 getBean 方法从容器中获取名称为 name 的 bean，</span></span><br><span class="line"><span class="comment">                     * 并将 bean 添加到 advisors 中</span></span><br><span class="line"><span class="comment">                     */</span> </span><br><span class="line">                    advisors.add(<span class="keyword">this</span>.beanFactory.getBean(name, Advisor.class));</span><br><span class="line">                &#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//筛选流程</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">canApply</span><span class="params">(Pointcut pc, Class&lt;?&gt; targetClass, <span class="keyword">boolean</span> hasIntroductions)</span> </span>&#123;</span><br><span class="line">    Assert.notNull(pc, <span class="string">"Pointcut must not be null"</span>);</span><br><span class="line">    <span class="comment">// 使用 ClassFilter 匹配 class 根据切入点表达式可以得知advisor对应增强的类，包含当前对象，则返回true。否认false</span></span><br><span class="line">    <span class="keyword">if</span> (!pc.getClassFilter().matches(targetClass)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MethodMatcher methodMatcher = pc.getMethodMatcher();</span><br><span class="line">    <span class="keyword">if</span> (methodMatcher == MethodMatcher.TRUE) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    IntroductionAwareMethodMatcher introductionAwareMethodMatcher = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (methodMatcher <span class="keyword">instanceof</span> IntroductionAwareMethodMatcher) &#123;</span><br><span class="line">        introductionAwareMethodMatcher = (IntroductionAwareMethodMatcher) methodMatcher;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 查找当前类及其父类（以及父类的父类等等）所实现的接口，由于接口中的方法是 public，</span></span><br><span class="line"><span class="comment">     * 所以当前类可以继承其父类，和父类的父类中所有的接口方法</span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    Set&lt;Class&lt;?&gt;&gt; classes = <span class="keyword">new</span> LinkedHashSet&lt;Class&lt;?&gt;&gt;(ClassUtils.getAllInterfacesForClassAsSet(targetClass));</span><br><span class="line">    classes.add(targetClass);</span><br><span class="line">    <span class="keyword">for</span> (Class&lt;?&gt; clazz : classes) &#123;</span><br><span class="line">        <span class="comment">// 获取当前类的方法列表，包括从父类中继承的方法</span></span><br><span class="line">        Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);</span><br><span class="line">        <span class="comment">//遍历所有的方法，如果切入点表达式中包含方法，直接返回true。否则返回false</span></span><br><span class="line">        <span class="keyword">for</span> (Method method : methods) &#123;</span><br><span class="line">            <span class="comment">// 使用 methodMatcher 匹配方法，匹配成功即可立即返回</span></span><br><span class="line">            <span class="keyword">if</span> ((introductionAwareMethodMatcher != <span class="keyword">null</span> &amp;&amp;</span><br><span class="line">                    introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions)) ||</span><br><span class="line">                    methodMatcher.matches(method, targetClass)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建代理对象"><a href="#创建代理对象" class="headerlink" title="创建代理对象"></a>创建代理对象</h3><p>AopProxy 接口 </p>
+<p>​    JdkDynamicAopProxy</p>
+<p>​    CglibAopProxy </p>
+<p>spring在为bean创建代理对象的时候，是根据bean是否实现了接口，还有配置来决定使用哪个proxy。proxy-target-class = false 时。cglibAopProxy</p>
+<p>AopProxy调用getProxy来创建代理对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//JdkDynamicAopProxy</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">getProxy</span><span class="params">(@Nullable ClassLoader classLoader)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">			logger.debug(<span class="string">"Creating JDK dynamic proxy: target source is "</span> + <span class="keyword">this</span>.advised.getTargetSource());</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 获取完整的代理接口</span></span><br><span class="line">		Class&lt;?&gt;[] proxiedInterfaces = AopProxyUtils.completeProxiedInterfaces(<span class="keyword">this</span>.advised, <span class="keyword">true</span>);</span><br><span class="line">		findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);</span><br><span class="line">		<span class="comment">// 调用JDK动态代理方法</span></span><br><span class="line">		<span class="keyword">return</span> Proxy.newProxyInstance(classLoader, proxiedInterfaces, <span class="keyword">this</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="jdkd动态代理逻辑分析"><a href="#jdkd动态代理逻辑分析" class="headerlink" title="jdkd动态代理逻辑分析"></a>jdkd动态代理逻辑分析</h3><ul>
+<li><p>获取适合当前方法的所有拦截器</p>
+</li>
+<li><p>如果拦截器链为空，直接反射执行目标方法</p>
+</li>
+<li><p>如果不为空，调用ReflectiveMethodInovation对象proceed()</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="拦截器和拦截器链"><a href="#拦截器和拦截器链" class="headerlink" title="拦截器和拦截器链"></a>拦截器和拦截器链</h3><p>拦截器：advisor的包装，invoke方法调用下一个拦截器的invoke     </p>
+   <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//后置拦截器，保证先执行目标方法之前的invoke，然后再执行后置方法</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AspectJAfterAdvice</span> <span class="keyword">extends</span> <span class="title">AbstractAspectJAdvice</span></span></span><br><span class="line"><span class="class">        <span class="keyword">implements</span> <span class="title">MethodInterceptor</span>, <span class="title">AfterAdvice</span>, <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AspectJAfterAdvice</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            Method aspectJBeforeAdviceMethod, AspectJExpressionPointcut pointcut, AspectInstanceFactory aif)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">super</span>(aspectJBeforeAdviceMethod, pointcut, aif);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(MethodInvocation mi)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 调用 proceed</span></span><br><span class="line">            <span class="keyword">return</span> mi.proceed();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// 调用后置通知逻辑</span></span><br><span class="line">            invokeAdviceMethod(getJoinPointMatch(), <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>拦截器链的执行</p>
+<p>拦截器执行invoke() 方法的时候，调用了proceed() 方法，</p>
+<p>proceed()方法,每次从集合中拿出来，执行，适用于目标方法，则执行，不适用目标方法，则index++。形成执行链。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">proceed</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">		<span class="comment">// We start with an index of -1 and increment early.</span></span><br><span class="line">		<span class="comment">// 如果执行到链条的末尾 则直接调用连接点方法 即 直接调用目标方法</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.currentInterceptorIndex == <span class="keyword">this</span>.interceptorsAndDynamicMethodMatchers.size() - <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> invokeJoinpoint();</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 获取集合中的 MethodInterceptor</span></span><br><span class="line">		Object interceptorOrInterceptionAdvice = <span class="keyword">this</span>.interceptorsAndDynamicMethodMatchers</span><br><span class="line">				.get(++<span class="keyword">this</span>.currentInterceptorIndex);</span><br><span class="line">		<span class="comment">// 如果是InterceptorAndDynamicMethodMatcher类型</span></span><br><span class="line">		<span class="keyword">if</span> (interceptorOrInterceptionAdvice <span class="keyword">instanceof</span> InterceptorAndDynamicMethodMatcher) &#123;</span><br><span class="line">			<span class="comment">// Evaluate dynamic method matcher here: static part will already have</span></span><br><span class="line">			<span class="comment">// been evaluated and found to match.</span></span><br><span class="line">			InterceptorAndDynamicMethodMatcher dm = (InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;</span><br><span class="line">			<span class="comment">// 这里每一次都去匹配是否适用于这个目标方法</span></span><br><span class="line">			<span class="keyword">if</span> (dm.methodMatcher.matches(<span class="keyword">this</span>.method, <span class="keyword">this</span>.targetClass, <span class="keyword">this</span>.arguments)) &#123;</span><br><span class="line">				<span class="comment">// 如果匹配则直接调用 MethodInterceptor的invoke方法</span></span><br><span class="line">				<span class="comment">// 注意这里传入的参数是this 我们下面看一下 ReflectiveMethodInvocation的类型</span></span><br><span class="line">				<span class="keyword">return</span> dm.interceptor.invoke(<span class="keyword">this</span>);</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="comment">// Dynamic matching failed.</span></span><br><span class="line">				<span class="comment">// Skip this interceptor and invoke the next in the chain.</span></span><br><span class="line">				<span class="comment">// 如果不适用于此目标方法 则继续执行下一个链条</span></span><br><span class="line">				<span class="comment">// 递归调用</span></span><br><span class="line">				<span class="keyword">return</span> proceed();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 说明是适用于此目标方法的 直接调用 MethodInterceptor的invoke方法</span></span><br><span class="line">			<span class="comment">// 传入this即ReflectiveMethodInvocation实例</span></span><br><span class="line">			<span class="comment">// 传入this进入 这样就可以形成一个调用的链条了</span></span><br><span class="line">			<span class="keyword">return</span> ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(<span class="keyword">this</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结JdkDynamicAopProxy的invoke方法，</p>
+<p>获取拦截器链，然后执行拦截器链，执行时候，前置通知，直接执行，调用下一个拦截器的invoke方法。后置通知，等所有前置通知和目标方法执行完后，再去执行inovke方法</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/24/spring源码解析系列-AOP创建代理对象流程/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-spring源码解析系列-AOP解析流程" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/24/spring源码解析系列-AOP解析流程/">spring源码解析系列-AOP解析流程</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/24/spring源码解析系列-AOP解析流程/" class="archive-article-date">
+  	<time datetime="2019-07-24T09:57:25.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="程序入口"><a href="#程序入口" class="headerlink" title="程序入口"></a>程序入口</h3><p>ConfigBeanDefinitionParser#parse()</p>
+<ul>
+<li>生成AspectJAwareAdvisorAutoProxyCreator 对象，该对象实现了beanPostProcessor接口，并将给对象注册到beandefinitions中</li>
+<li>解析<a href="aop:aspect" target="_blank" rel="noopener">aop:aspect</a> 配置。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> BeanDefinition <span class="title">parse</span><span class="params">(Element element, ParserContext parserContext)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 向IoC容器中注册 AspectJAwareAdvisorAutoProxyCreator</span></span><br><span class="line">		<span class="comment">// 类的BeanDefinition：（用于创建AOP代理对象的）类似于代理对象工厂类</span></span><br><span class="line">		<span class="comment">// BeanPostProcessor可以对实例化之后的bean进行一些操作</span></span><br><span class="line">		<span class="comment">// AspectJAwareAdvisorAutoProxyCreator</span></span><br><span class="line">		<span class="comment">// 实现了BeanPostProcessor接口,可以对目标对象实例化之后，创建对应的代理对象</span></span><br><span class="line">		configureAutoProxyCreator(parserContext, element);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 获取&lt;aop:config&gt;标签的子标签&lt;aop:aspect&gt;、&lt;aop:advisor&gt; 、&lt;aop:pointcut&gt;</span></span><br><span class="line">		List&lt;Element&gt; childElts = DomUtils.getChildElements(element);</span><br><span class="line">		<span class="keyword">for</span> (Element elt : childElts) &#123;</span><br><span class="line">			<span class="comment">// 获取子标签的节点名称或者叫元素名称</span></span><br><span class="line">			String localName = parserContext.getDelegate().getLocalName(elt);</span><br><span class="line">			<span class="keyword">if</span> (POINTCUT.equals(localName)) &#123;</span><br><span class="line">				<span class="comment">// 解析&lt;aop:pointcut&gt;标签</span></span><br><span class="line">				<span class="comment">// 产生一个AspectJExpressionPointcut的BeanDefinition对象，并注册</span></span><br><span class="line">				parsePointcut(elt, parserContext);</span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ADVISOR.equals(localName)) &#123;</span><br><span class="line">				<span class="comment">// 解析&lt;aop:advisor&gt;标签</span></span><br><span class="line">				<span class="comment">// 产生一个DefaultBeanFactoryPointcutAdvisor的BeanDefinition对象，并注册</span></span><br><span class="line">				parseAdvisor(elt, parserContext);</span><br><span class="line">			&#125; <span class="keyword">else</span> <span class="keyword">if</span> (ASPECT.equals(localName)) &#123;</span><br><span class="line">				<span class="comment">// 解析&lt;aop:aspect&gt;标签</span></span><br><span class="line">				<span class="comment">// 产生了很多BeanDefinition对象</span></span><br><span class="line">				<span class="comment">// aop:after等标签对应5个BeanDefinition对象</span></span><br><span class="line">				<span class="comment">// aop:after标签的method属性对应1个BeanDefinition对象</span></span><br><span class="line">				<span class="comment">// 最终的AspectJPointcutAdvisor BeanDefinition类</span></span><br><span class="line">				<span class="comment">// for 循环，最后会形成一个pointCut链</span></span><br><span class="line">				parseAspect(elt, parserContext);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		parserContext.popAndRegisterContainingComponent();</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="parseAspect"><a href="#parseAspect" class="headerlink" title="parseAspect"></a>parseAspect</h3><p>解析生成AspectPointAdvisor对象，并注册到beanDifintions容器中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> AbstractBeanDefinition <span class="title">parseAdvice</span><span class="params">(String aspectName, <span class="keyword">int</span> order, Element aspectElement,</span></span></span><br><span class="line"><span class="function"><span class="params">			Element adviceElement, ParserContext parserContext, List&lt;BeanDefinition&gt; beanDefinitions,</span></span></span><br><span class="line"><span class="function"><span class="params">			List&lt;BeanReference&gt; beanReferences)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> AdviceEntry(parserContext.getDelegate().getLocalName(adviceElement)));</span><br><span class="line"></span><br><span class="line">			<span class="comment">// create the method factory bean</span></span><br><span class="line">			<span class="comment">// 创建方法工厂Bean的BeanDefinition对象：用于获取Advice增强类的Method对象</span></span><br><span class="line">			RootBeanDefinition methodDefinition = <span class="keyword">new</span> RootBeanDefinition(MethodLocatingFactoryBean.class);</span><br><span class="line">			<span class="comment">// 设置MethodLocatingFactoryBean的targetBeanName为advice类的引用名称</span></span><br><span class="line">			methodDefinition.getPropertyValues().add(<span class="string">"targetBeanName"</span>, aspectName);</span><br><span class="line">			<span class="comment">// 设置MethodLocatingFactoryBean的methodName为&lt;aop:after&gt;标签的method属性值（也就是advice方法名称）</span></span><br><span class="line">			methodDefinition.getPropertyValues().add(<span class="string">"methodName"</span>, adviceElement.getAttribute(<span class="string">"method"</span>));</span><br><span class="line">			methodDefinition.setSynthetic(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">			<span class="comment">// create instance factory definition</span></span><br><span class="line">			<span class="comment">// 创建实例工厂BeanDefinition：用于创建增强类的实例</span></span><br><span class="line">			RootBeanDefinition aspectFactoryDef = <span class="keyword">new</span> RootBeanDefinition(</span><br><span class="line">					SimpleBeanFactoryAwareAspectInstanceFactory.class);</span><br><span class="line">			<span class="comment">// 设置SimpleBeanFactoryAwareAspectInstanceFactory的aspectBeanName为advice类的引用名称</span></span><br><span class="line">			aspectFactoryDef.getPropertyValues().add(<span class="string">"aspectBeanName"</span>, aspectName);</span><br><span class="line">			aspectFactoryDef.setSynthetic(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">			<span class="comment">// 以上的两个BeanDefinition的作用主要是通过反射调用Advice对象的指定方法</span></span><br><span class="line">			<span class="comment">// method.invoke(obj,args)</span></span><br><span class="line"></span><br><span class="line">			<span class="comment">// register the pointcut</span></span><br><span class="line">			<span class="comment">// 通知增强类的BeanDefinition对象（核心） 返回的是advice对象</span></span><br><span class="line">			AbstractBeanDefinition adviceDef = createAdviceDefinition(adviceElement, parserContext, aspectName, order,</span><br><span class="line">					methodDefinition, aspectFactoryDef, beanDefinitions, beanReferences);</span><br><span class="line"></span><br><span class="line">			<span class="comment">// configure the advisor</span></span><br><span class="line">			<span class="comment">// 通知器类的BeanDefinition对象 讲advice对象封装成AspectPointCutAdvisor 对象，最后会形成执行连</span></span><br><span class="line">			RootBeanDefinition advisorDefinition = <span class="keyword">new</span> RootBeanDefinition(AspectJPointcutAdvisor.class);</span><br><span class="line">			advisorDefinition.setSource(parserContext.extractSource(adviceElement));</span><br><span class="line">			<span class="comment">// 给通知器类设置Advice对象属性值</span></span><br><span class="line">			advisorDefinition.getConstructorArgumentValues().addGenericArgumentValue(adviceDef);</span><br><span class="line">			<span class="keyword">if</span> (aspectElement.hasAttribute(ORDER_PROPERTY)) &#123;</span><br><span class="line">				advisorDefinition.getPropertyValues().add(ORDER_PROPERTY, aspectElement.getAttribute(ORDER_PROPERTY));</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="comment">// register the final advisor</span></span><br><span class="line">			<span class="comment">// 将advisorDefinition注册到IoC容器中</span></span><br><span class="line">			parserContext.getReaderContext().registerWithGeneratedName(advisorDefinition);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">return</span> advisorDefinition;</span><br><span class="line">		&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">			<span class="keyword">this</span>.parseState.pop();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">AOP解析</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/24/spring源码解析系列-AOP解析流程/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-spring源码解析系列-Aware-BeanPostProcessor" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -503,525 +1123,9 @@
 
 
   
-    <article id="post-mybatis源码解析系列-4大对象" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/23/mybatis源码解析系列-4大对象/">mybatis源码解析系列-statementHandler</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/23/mybatis源码解析系列-4大对象/" class="archive-article-date">
-  	<time datetime="2019-07-23T09:41:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-23</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="statementHandler"><a href="#statementHandler" class="headerlink" title="statementHandler"></a>statementHandler</h3><ul>
-<li><p>入口</p>
-<p>simpleExecutor#doQuery()</p>
-<p>根据解析的mappedStatement的中statmentType去生成对应的statementHandler对象</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">doQuery</span><span class="params">(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Configuration configuration = ms.getConfiguration();</span><br><span class="line">        <span class="comment">// &lt;1&gt; 创建 StatementHandler 对象</span></span><br><span class="line">        StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">        <span class="comment">// &lt;2&gt; 初始化 StatementHandler 对象</span></span><br><span class="line">        stmt = prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">        <span class="comment">// &lt;3&gt; 执行 StatementHandler  ，进行读操作</span></span><br><span class="line">        <span class="keyword">return</span> handler.query(stmt, resultHandler);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;4&gt; 关闭 StatementHandler 对象</span></span><br><span class="line">        closeStatement(stmt);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//&lt;1&gt;创建statementHandler对象是使用的MappingStatementHandler对象</span></span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="title">RoutingStatementHandler</span><span class="params">(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (ms.getStatementType()) &#123;</span><br><span class="line">      <span class="keyword">case</span> STATEMENT:</span><br><span class="line">        delegate = <span class="keyword">new</span> SimpleStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">case</span> PREPARED:</span><br><span class="line">        delegate = <span class="keyword">new</span> PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">case</span> CALLABLE:</span><br><span class="line">        delegate = <span class="keyword">new</span> CallableStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Unknown statement type: "</span> + ms.getStatementType());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>statementHandler的作用</p>
-<p>1.获取连接</p>
-<p>2.生成对应的statment，例如prepareStaetment对象</p>
-<p>3.设置preparestatement的占位符</p>
-<p>4.执行查询prepareStatement.execute()</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Statement <span class="title">prepareStatement</span><span class="params">(StatementHandler handler, Log statementLog)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">		Statement stmt;</span><br><span class="line">		<span class="comment">// 获取连接</span></span><br><span class="line">		Connection connection = getConnection(statementLog);</span><br><span class="line">		<span class="comment">// 创建Statement（PreparedStatement、Statement、CallableStatement）</span></span><br><span class="line">		stmt = handler.prepare(connection, transaction.getTimeout());</span><br><span class="line">		<span class="comment">// SQL参数设置</span></span><br><span class="line">		handler.parameterize(stmt);</span><br><span class="line">		<span class="keyword">return</span> stmt;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//执行查询</span></span><br><span class="line"><span class="keyword">public</span> &lt;E&gt; <span class="function">List&lt;E&gt; <span class="title">query</span><span class="params">(Statement statement, ResultHandler resultHandler)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    PreparedStatement ps = (PreparedStatement) statement;</span><br><span class="line">    <span class="comment">// 执行PreparedStatement，也就是执行SQL语句</span></span><br><span class="line">    ps.execute();</span><br><span class="line">    <span class="comment">// 处理结果集</span></span><br><span class="line">    <span class="keyword">return</span> resultSetHandler.handleResultSets(ps);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>statementHandler的体系结构</p>
-<p>– RoutingStatementHandler</p>
-<p>– BaseStatementHandler</p>
-<p>​    –simpleStatementHandler</p>
-<p>​    –prepareStatementHandler</p>
-<p>​    – collcableStatementHandler</p>
-</li>
-</ul>
-</li>
-</ul>
-<p>  注： 由上面代码可知， resultSetHandler 来处理结果集。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">mybatis四大对象</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/23/mybatis源码解析系列-4大对象/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-设计模式-适配器模式" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/22/设计模式-适配器模式/">设计模式-适配器模式</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/22/设计模式-适配器模式/" class="archive-article-date">
-  	<time datetime="2019-07-22T04:35:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-22</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h3><p>作用：将一个类的接口转换成另外一个客户希望的接口<br>          解决的问题就是一个标准和另一个标准不兼容的问题。<br>          解决方案有两种：<br>          1、一个标准去匹配另一个标准<br>          2、两个不兼容的标准，去找到一个兼容的标准</p>
-<h3 id="adapter"><a href="#adapter" class="headerlink" title="adapter"></a>adapter</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//DBSocket 适配的目标接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DBSocketAdapter</span> <span class="keyword">implements</span> <span class="title">GuoJiSocket</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//被适配的接口</span></span><br><span class="line">	<span class="keyword">private</span>  DBSocket dbSocket;</span><br><span class="line">	</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">DBSocketAdapter</span><span class="params">(DBSocket dbSocket)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.dbSocket = dbSocket;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 适配之后的方法</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">method</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 实质上调用德国标准</span></span><br><span class="line">		dbSocket.method();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="iface"><a href="#iface" class="headerlink" title="iface"></a>iface</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">DBSocket</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">method</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GuoJiSocket</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">method</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="使用者"><a href="#使用者" class="headerlink" title="使用者"></a>使用者</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用者</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DeGuoHotel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 国际标准的两眼插座</span></span><br><span class="line">	<span class="keyword">private</span> GuoJiSocket socket;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setGuoJiSocket</span><span class="params">(GuoJiSocket socket)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.socket = socket;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 在宾馆充电</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">charge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 看起来是调用的DBSocket的标准进行充电，但是实质上是通过GBSocket完成充电</span></span><br><span class="line">		<span class="comment">// 通过适配器将GBSocket适配成DBSocket</span></span><br><span class="line">		socket.method();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		DeGuoHotel hotel = <span class="keyword">new</span> DeGuoHotel();</span><br><span class="line"><span class="comment">//		hotel.setDBSocket(new DBSocketAdapter(new DBSocketImpl()));</span></span><br><span class="line">		hotel.setGuoJiSocket(<span class="keyword">new</span> GBSocketAdapter(<span class="keyword">new</span> GBSocketImpl()));</span><br><span class="line">		hotel.charge();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">适配器模式</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/22/设计模式-适配器模式/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-设计模式-抽象模板" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/22/设计模式-抽象模板/">设计模式-抽象模板</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/22/设计模式-抽象模板/" class="archive-article-date">
-  	<time datetime="2019-07-22T04:35:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-22</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="父类定义模板方法"><a href="#父类定义模板方法" class="headerlink" title="父类定义模板方法"></a>父类定义模板方法</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">ublic <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">GetTimeTemplate</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 固定流程方法</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getTime</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 获取起始时间</span></span><br><span class="line">		<span class="keyword">long</span> t1 = System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 模板方法</span></span><br><span class="line">		<span class="keyword">this</span>.code();</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 获取结束时间</span></span><br><span class="line">		<span class="keyword">long</span> t2 = System.currentTimeMillis();</span><br><span class="line">		<span class="keyword">return</span> t2 - t1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 钩子方法</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">code</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="子类延迟实现"><a href="#子类延迟实现" class="headerlink" title="子类延迟实现"></a>子类延迟实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ForDemo</span> <span class="keyword">extends</span> <span class="title">GetTimeTemplate</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">code</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		</span><br><span class="line">		<span class="comment">//输出for循环</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">			System.out.println(i);</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		<span class="comment">/*GetTime time = new GetTime();</span></span><br><span class="line"><span class="comment">		System.out.println("耗时 "+time.getTime()+" 毫秒");*/</span></span><br><span class="line">		</span><br><span class="line">		GetTimeTemplate time = <span class="keyword">new</span> ForDemo();</span><br><span class="line">		System.out.println(<span class="string">"耗时 "</span>+time.getTime()+<span class="string">" 毫秒"</span>);</span><br><span class="line"></span><br><span class="line">		</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/22/设计模式-抽象模板/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-设计模式-策略模式" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/22/设计模式-策略模式/">设计模式-策略模式</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/22/设计模式-策略模式/" class="archive-article-date">
-  	<time datetime="2019-07-22T04:34:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-22</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="策略模式的组成"><a href="#策略模式的组成" class="headerlink" title="策略模式的组成"></a>策略模式的组成</h3><ul>
-<li>抽象策略角色： 策略类，通常由一个接口或者抽象类实现。</li>
-<li>具体策略角色：包装了相关的算法和行为。</li>
-<li>环境角色：持有一个策略类的引用，最终给客户端调用。</li>
-</ul>
-<h3 id="抽象策略角色"><a href="#抽象策略角色" class="headerlink" title="抽象策略角色"></a>抽象策略角色</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TravelStrategy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 是否可以匹配</span></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">isOK</span><span class="params">(<span class="keyword">int</span> type)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 出行方式</span></span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">travelWay</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="具体策略角色"><a href="#具体策略角色" class="headerlink" title="具体策略角色"></a>具体策略角色</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AirPlanStrategy</span> <span class="keyword">implements</span> <span class="title">TravelStrategy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isOK</span><span class="params">(<span class="keyword">int</span> type)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (type &gt;= <span class="number">10000</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">travelWay</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"乘坐飞机旅行"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BicycleStrategy</span> <span class="keyword">implements</span> <span class="title">TravelStrategy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isOK</span><span class="params">(<span class="keyword">int</span> type)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (type &lt; <span class="number">10000</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">travelWay</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		System.out.println(<span class="string">"乘坐火车旅行"</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="环境角色"><a href="#环境角色" class="headerlink" title="环境角色"></a>环境角色</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PersonContext</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> List&lt;TravelStrategy&gt; strategyList = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">PersonContext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		strategyList = <span class="keyword">new</span> ArrayList&lt;TravelStrategy&gt;();</span><br><span class="line">		strategyList.add(<span class="keyword">new</span> AirPlanStrategy());</span><br><span class="line">		strategyList.add(<span class="keyword">new</span> BicycleStrategy());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">travelWay</span><span class="params">(<span class="keyword">int</span> type)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 避免了使用多个if 判断的书写方式，，使用策略模式</span></span><br><span class="line">		<span class="comment">// for 循环遍历每个策略，通过isok 找到适合的策略，然后 执行策略</span></span><br><span class="line">		<span class="keyword">for</span> (TravelStrategy travelStrategy : strategyList) &#123;</span><br><span class="line">			<span class="keyword">if</span> (travelStrategy.isOK(type)) &#123;</span><br><span class="line">				travelStrategy.travelWay();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="测试类"><a href="#测试类" class="headerlink" title="测试类"></a>测试类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">		PersonContext context = <span class="keyword">new</span> PersonContext();</span><br><span class="line">		<span class="comment">// 只需要传递不同的参数，提供不同的出行方式</span></span><br><span class="line">		context.travelWay(<span class="number">20000</span>);</span><br><span class="line">		context.travelWay(<span class="number">100</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">为不同的问题找到合适的解决方案</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/22/设计模式-策略模式/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="w-spring源码解析-tx事务管理" class="article article-type-w  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/21/spring源码解析-tx事务管理/">spring源码解析-tx事务管理</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/21/spring源码解析-tx事务管理/" class="archive-article-date">
-  	<time datetime="2019-07-21T09:43:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="1-解析标签"><a href="#1-解析标签" class="headerlink" title="1.解析标签"></a>1.解析<tx>标签</tx></h3><p>TransactionInterceptor 类会封装成advisor。就是Aop的增强类。最后还是会在BeanPostProcessor，定位到JdkAopProxy类中invoke方法执行。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; getBeanClass(Element element) &#123;</span><br><span class="line">		<span class="comment">// &lt;tx:advice&gt;标签对应的BeanDefinition对象的BeanClass</span></span><br><span class="line">		<span class="comment">// TransactionInterceptor实现了MethodInterceptor接口。该接口是Spring AOP实现之环绕通知的接口。</span></span><br><span class="line">		<span class="keyword">return</span> TransactionInterceptor.class;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//解析tx标签</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doParse</span><span class="params">(Element element, ParserContext parserContext, BeanDefinitionBuilder builder)</span> </span>&#123;</span><br><span class="line">		<span class="comment">// 配置的事务管理器(DataSourceTransactionManager)，最终会注入到TransactionInterceptor类</span></span><br><span class="line">		builder.addPropertyReference(<span class="string">"transactionManager"</span>, TxNamespaceHandler.getTransactionManagerName(element));</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 获取&lt;tx:attributes&gt;子标签</span></span><br><span class="line">		List&lt;Element&gt; txAttributes = DomUtils.getChildElementsByTagName(element, ATTRIBUTES_ELEMENT);</span><br><span class="line">		<span class="keyword">if</span> (txAttributes.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">			parserContext.getReaderContext().error(</span><br><span class="line">					<span class="string">"Element &lt;attributes&gt; is allowed at most once inside element &lt;advice&gt;"</span>, element);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (txAttributes.size() == <span class="number">1</span>) &#123;</span><br><span class="line">			<span class="comment">// Using attributes source.</span></span><br><span class="line">			Element attributeSourceElement = txAttributes.get(<span class="number">0</span>);</span><br><span class="line">			<span class="comment">// 解析&lt;tx:attributes&gt;标签</span></span><br><span class="line">			RootBeanDefinition attributeSourceDefinition = parseAttributeSource(attributeSourceElement, parserContext);</span><br><span class="line">			builder.addPropertyValue(<span class="string">"transactionAttributeSource"</span>, attributeSourceDefinition);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">// 使用注解方式的事务属性源</span></span><br><span class="line">			<span class="comment">// Assume annotations source.</span></span><br><span class="line">			builder.addPropertyValue(<span class="string">"transactionAttributeSource"</span>,</span><br><span class="line">					<span class="keyword">new</span> RootBeanDefinition(<span class="string">"org.springframework.transaction.annotation.AnnotationTransactionAttributeSource"</span>));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="2-TranscationInteceptor-invoke"><a href="#2-TranscationInteceptor-invoke" class="headerlink" title="2.TranscationInteceptor#invoke()"></a>2.TranscationInteceptor#invoke()</h3><p>动态代理调用的invoke方法</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(<span class="keyword">final</span> MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line"></span><br><span class="line">		Class&lt;?&gt; targetClass = (invocation.getThis() != <span class="keyword">null</span> ? AopUtils.getTargetClass(invocation.getThis()) : <span class="keyword">null</span>);</span><br><span class="line">		<span class="comment">// 调用TransactionAspectSupport类的invokeWithinTransaction方法去实现事务支持</span></span><br><span class="line">		<span class="keyword">return</span> invokeWithinTransaction(invocation.getMethod(), targetClass, invocation::proceed);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-invokeWithinTransaction"><a href="#3-invokeWithinTransaction" class="headerlink" title="3.invokeWithinTransaction()"></a>3.invokeWithinTransaction()</h3><ul>
-<li>获取具体的平台事务管理器开启事务（平台事务管理器ResourceTransactionManager，规范了开启，提交，回滚接口）</li>
-<li>提交事务</li>
-<li>回滚事务<ul>
-<li>注：spring的平台事务管理器，有不同的实现，jdbc，mybatis等事务管理器。jdbc等最后会调用数据库的事务命令来开启，提交，回滚事务。</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">invokeWithinTransaction</span><span class="params">(Method method, @Nullable Class&lt;?&gt; targetClass,</span></span></span><br><span class="line"><span class="function"><span class="params">			<span class="keyword">final</span> InvocationCallback invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// If the transaction attribute is null, the method is non-transactional.</span></span><br><span class="line">		<span class="comment">// 获取事务属性，如果属性为空，那么说明该方法是非事务支持的</span></span><br><span class="line">		TransactionAttributeSource tas = getTransactionAttributeSource();</span><br><span class="line">		<span class="comment">// 事务属性信息</span></span><br><span class="line">		<span class="keyword">final</span> TransactionAttribute txAttr = (tas != <span class="keyword">null</span> ? tas.getTransactionAttribute(method, targetClass) : <span class="keyword">null</span>);</span><br><span class="line">		<span class="comment">// 平台事务管理器（确定具体的平台事务管理器）</span></span><br><span class="line">		<span class="keyword">final</span> PlatformTransactionManager tm = determineTransactionManager(txAttr);</span><br><span class="line">		<span class="keyword">final</span> String joinpointIdentification = methodIdentification(method, targetClass, txAttr);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (txAttr == <span class="keyword">null</span> || !(tm <span class="keyword">instanceof</span> CallbackPreferringPlatformTransactionManager)) &#123;</span><br><span class="line">			<span class="comment">// Standard transaction demarcation with getTransaction and commit/rollback</span></span><br><span class="line">			<span class="comment">// calls.</span></span><br><span class="line">			<span class="comment">// 创建事务信息对象，同时通过平台事务管理器，创建事务</span></span><br><span class="line">			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);</span><br><span class="line">			Object retVal = <span class="keyword">null</span>;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				<span class="comment">// This is an around advice: Invoke the next interceptor in the chain.</span></span><br><span class="line">				<span class="comment">// This will normally result in a target object being invoked.</span></span><br><span class="line">				<span class="comment">// 执行目标对象的方法</span></span><br><span class="line">				retVal = invocation.proceedWithInvocation();</span><br><span class="line">			&#125; <span class="keyword">catch</span> (Throwable ex) &#123;</span><br><span class="line">				<span class="comment">// target invocation exception</span></span><br><span class="line">				<span class="comment">// 执行事务的rollback方法</span></span><br><span class="line">				completeTransactionAfterThrowing(txInfo, ex);</span><br><span class="line">				<span class="keyword">throw</span> ex;</span><br><span class="line">			&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">				cleanupTransactionInfo(txInfo);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="comment">// 执行事务的commit方法</span></span><br><span class="line">			commitTransactionAfterReturning(txInfo);</span><br><span class="line">			<span class="keyword">return</span> retVal;</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-AbstarctPlatformTransactionManager-doBegin"><a href="#4-AbstarctPlatformTransactionManager-doBegin" class="headerlink" title="4.AbstarctPlatformTransactionManager#doBegin"></a>4.AbstarctPlatformTransactionManager#doBegin</h3><p>开启事务，分别调用不同的事务管理器去开启事务 以DataSourceTransactionManager</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">tx 事务管理</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/21/spring源码解析-tx事务管理/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-mybatis源码解析系列-主键生成" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/14/mybatis源码解析系列-主键生成/">mybatis源码解析系列-主键生成</a>
-    </h1>
-  
-
-        
-        <a href="/2019/07/14/mybatis源码解析系列-主键生成/" class="archive-article-date">
-  	<time datetime="2019-07-14T13:35:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-14</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="KeyGenerator"><a href="#KeyGenerator" class="headerlink" title="KeyGenerator"></a>KeyGenerator</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">KeyGenerator</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SQL 执行前</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">processBefore</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// SQL 执行后</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">processAfter</span><span class="params">(Executor executor, MappedStatement ms, Statement stmt, Object parameter)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="三个实现类"><a href="#三个实现类" class="headerlink" title="三个实现类"></a>三个实现类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//主讲 Jdbc3KeyGenerator</span></span><br><span class="line"><span class="comment">// processBefore 空实现 </span></span><br><span class="line"><span class="comment">// processAfter 调用 processBatch</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processBatch</span><span class="params">(MappedStatement ms, Statement stmt, Object parameter)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// &lt;1&gt; 获得主键属性的配置。如果为空，则直接返回，说明不需要主键</span></span><br><span class="line">    <span class="keyword">final</span> String[] keyProperties = ms.getKeyProperties();</span><br><span class="line">    <span class="keyword">if</span> (keyProperties == <span class="keyword">null</span> || keyProperties.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ResultSet rs = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;2&gt; 获得返回的自增主键</span></span><br><span class="line">        rs = stmt.getGeneratedKeys();</span><br><span class="line">        <span class="keyword">final</span> Configuration configuration = ms.getConfiguration();</span><br><span class="line">        <span class="keyword">if</span> (rs.getMetaData().getColumnCount() &gt;= keyProperties.length) &#123;</span><br><span class="line">            <span class="comment">// &lt;3&gt; 获得唯一的参数对象</span></span><br><span class="line">            Object soleParam = getSoleParameter(parameter);</span><br><span class="line">            <span class="keyword">if</span> (soleParam != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// &lt;3.1&gt; 设置主键们，到参数 soleParam 中</span></span><br><span class="line">                assignKeysToParam(configuration, rs, keyProperties, soleParam);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="comment">// &lt;3.2&gt; 设置主键们，到参数 parameter 中</span></span><br><span class="line">                assignKeysToOneOfParams(configuration, rs, keyProperties, (Map&lt;?, ?&gt;) parameter);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Error getting generated key or setting result to parameter object. Cause: "</span> + e, e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;4&gt; 关闭 ResultSet 对象</span></span><br><span class="line">        <span class="keyword">if</span> (rs != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                rs.close();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                <span class="comment">// ignore</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>总结： 一个接口，三个实现类</p>
-<p>是基于数据库的主键返回来做的主键返回。讲主键返回，封装到对应的参数。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">主键返回</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/14/mybatis源码解析系列-主键生成/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
+      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
     </nav>
   
 
@@ -1116,19 +1220,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1136,23 +1232,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1164,7 +1252,23 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1188,10 +1292,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
@@ -1200,11 +1300,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1220,51 +1324,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1280,7 +1340,59 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
             
             <div class="clearfix"></div>
