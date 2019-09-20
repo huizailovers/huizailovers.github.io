@@ -152,6 +152,120 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-io多路复用" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/18/io多路复用/">io多路复用</a>
+    </h1>
+  
+
+        
+        <a href="/2019/08/18/io多路复用/" class="archive-article-date">
+  	<time datetime="2019-08-18T06:41:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-18</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="用户空间，内核空间"><a href="#用户空间，内核空间" class="headerlink" title="用户空间，内核空间"></a>用户空间，内核空间</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">str = <span class="string">"my string"</span> <span class="comment">// 用户空间</span></span><br><span class="line">x = x + <span class="number">2</span> file.write(str) <span class="comment">// 切换到内核空间 </span></span><br><span class="line">y = x + <span class="number">4</span> <span class="comment">// 切换回用户空间</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="缓存io"><a href="#缓存io" class="headerlink" title="缓存io"></a>缓存io</h3><ul>
+<li>读操作： 如果内核空间中有数据，直接返回给用户空间，内核空间没，从磁盘中读取，缓存到内核空间</li>
+<li>写操作： 从用户空间写到内核空间，表示写完成，至于内核空间到用户空间，则是系统决定，减少了io次数</li>
+</ul>
+<h3 id="同步，异步io（数据交互方式）"><a href="#同步，异步io（数据交互方式）" class="headerlink" title="同步，异步io（数据交互方式）"></a>同步，异步io（数据交互方式）</h3><ul>
+<li>同步： 用户线程想要得数据，必须等到系统空间给到，才会继续向下执行</li>
+<li>异步： 用户线程不需要等待系统空间数据，向下继续执行</li>
+</ul>
+<h3 id="阻塞，非阻塞io-（io方式）"><a href="#阻塞，非阻塞io-（io方式）" class="headerlink" title="阻塞，非阻塞io （io方式）"></a>阻塞，非阻塞io （io方式）</h3><ul>
+<li>用户空间通过系统调用和内核空间发生数据交互的时候是阻塞的</li>
+<li></li>
+<li>用户空间通过系统调用和内核空间发生数据交互的时候是直接返回的，不管有没有数据</li>
+</ul>
+<h3 id="reactor-反应器"><a href="#reactor-反应器" class="headerlink" title="reactor 反应器"></a>reactor 反应器</h3><ul>
+<li>客户端接收到请求的时候，一个线程来接收所有的请求，然后交给工作线程来处理数据。</li>
+<li>为啥使用，多线程创建和销毁线程消耗资源。</li>
+</ul>
+<h3 id="reator-原理"><a href="#reator-原理" class="headerlink" title="reator 原理"></a>reator 原理</h3><p><img src="C:%5CUsers%5Chschu%5CAppData%5CLocal%5CTemp%5C1566113175893.png" alt="1566113175893"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//注册事件到reator，添加到select的内核态中</span></span><br><span class="line">Reactor.<span class="keyword">register</span>(<span class="keyword">new</span> UserEventHandler(socket));</span><br><span class="line"><span class="comment">//遍历循环select，获取准备好的事件 （socket 可读）</span></span><br><span class="line">Reactor::handle_events() &#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;  <span class="comment">//循环获取select 数据</span></span><br><span class="line">        sockets = select(); </span><br><span class="line">        <span class="keyword">for</span>(socket in sockets) &#123;</span><br><span class="line">            get_event_handler(socket).handle_event();</span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line">&#125; </span><br><span class="line"><span class="comment">//从内核空间到用户空间读取数据</span></span><br><span class="line">read（socket，buffer）</span><br><span class="line">processBuffer（）；</span><br></pre></td></tr></table></figure>
+
+<h3 id="redis-io多路复用"><a href="#redis-io多路复用" class="headerlink" title="redis io多路复用"></a>redis io多路复用</h3><ul>
+<li>io多路复用： 是一种机制，可以监控多个描述符，一旦一个描述符就绪，通知程序来执行</li>
+<li>io多路复用使用 select poll epoll 机制。redis使用的是 epoll</li>
+<li>为什么使用  redis，单线程接收用户请求，单io阻塞读写的时候，无法正常的提供服务。</li>
+</ul>
+<h3 id="select-poll-epoll"><a href="#select-poll-epoll" class="headerlink" title="select poll epoll"></a>select poll epoll</h3><ul>
+<li>select 和poll 的缺点<ul>
+<li>每次都要把全量的句柄集合copy到内核空间</li>
+<li>遍历select的时候，每次都要遍历所有的句柄，并不是已经完成的句柄</li>
+<li>select 每次只能监听 1024个 句柄</li>
+</ul>
+</li>
+<li>epoll 做了优化<ul>
+<li>epoll_create 创建了一棵二叉树 （全部的句柄）和一个双向链表（完成的句柄）</li>
+<li>epoll_ctl 从二叉树移除完成的数据，添加到双向链表</li>
+<li>epoll_await 遍历双向链表，取出的是已经完成的句柄</li>
+</ul>
+</li>
+</ul>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">redis io多路复用实现</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/08/18/io多路复用/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-redis-常见问题" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -1202,118 +1316,6 @@
 
 
   
-    <article id="post-mysql深入解析-事务，mvcc" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/03/mysql深入解析-事务，mvcc/">mysql深入解析-事务，mvcc</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/03/mysql深入解析-事务，mvcc/" class="archive-article-date">
-  	<time datetime="2019-08-03T02:46:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-03</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="redolog"><a href="#redolog" class="headerlink" title="redolog"></a>redolog</h3><ul>
-<li><p>循环写的物理日志，作用是 mysql宕机的时候，来恢复数据使用。恢复的时候，不仅需要恢复提交的事务，还需要恢复没提交的</p>
-<h3 id="redologbuffer"><a href="#redologbuffer" class="headerlink" title="redologbuffer"></a>redologbuffer</h3></li>
-<li><p>记录的是 数据页 回滚页，undolog页（记录的是上一次的历史版本）。 统称为脏页</p>
-</li>
-<li><p>rollback的时候 ，通过redologbuffer中的undolog数据来回滚数据</p>
-</li>
-<li><p>数据库宕机，但是 没有commit的时候， 通过 redolog找到对应未提交的事务，然后去undolog中回滚数据。</p>
-</li>
-</ul>
-<h3 id="undolog"><a href="#undolog" class="headerlink" title="undolog"></a>undolog</h3><ul>
-<li>崩溃事务回滚操作，mvcc 多版本并发控制。</li>
-</ul>
-<h3 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h3><ul>
-<li>redolog ，undolog ，force log at commmit 来实现。 只用在redolog日志落盘后，事务才算commit成功。</li>
-<li>rollback后，可以通过undolog对所有的sql操作进行回滚，commit后，所有的数据都已经保存到硬盘。</li>
-</ul>
-<h3 id="持久性"><a href="#持久性" class="headerlink" title="持久性"></a>持久性</h3><ul>
-<li>所有的数据操作都记录到了redolog，保证了数据的持久性</li>
-</ul>
-<h3 id="一致性"><a href="#一致性" class="headerlink" title="一致性"></a>一致性</h3><ul>
-<li>原子性和一致性的统称。</li>
-</ul>
-<h3 id="一致性非锁定读"><a href="#一致性非锁定读" class="headerlink" title="一致性非锁定读"></a>一致性非锁定读</h3><ul>
-<li>在 RR 和 rc 的隔离级别下，select 语句读取数据的时候，遇到update语句等持有写锁的时候，会去读取快照来提高查询的效率。</li>
-</ul>
-<h3 id="mvcc-多版本控制的实现"><a href="#mvcc-多版本控制的实现" class="headerlink" title="mvcc 多版本控制的实现"></a>mvcc 多版本控制的实现</h3><p>根据的是 read view 视图 和 uodolog 来实现的</p>
-<ul>
-<li>前提 ： 隔离级别是 RR 或者 RC </li>
-<li>实现方式  rc 隔离级别下 每次sql语句都开启新的视图， 而 rr 是在事务开启的时候开启视图。 开启视图的时候，会查询当前的活跃的事务。读取的row 数据是活跃之前的历史数据。</li>
-</ul>
-<h3 id="数据回滚："><a href="#数据回滚：" class="headerlink" title="数据回滚："></a>数据回滚：</h3><ul>
-<li>commit 前 宕机<ul>
-<li>redolog 已经落盘  根据redolog中的undolog来恢复buffer pool中的数据</li>
-<li>redolog 没有落盘 根据 表空间中的undolog 来进行落盘。</li>
-</ul>
-</li>
-<li>commit 后宕机，数据已经记录到了redolog中，根据redolog 恢复undolog。然后根据undolog来恢复缓存中的数据。</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">事务 mvcc</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/03/mysql深入解析-事务，mvcc/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
@@ -1419,10 +1421,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
@@ -1431,7 +1429,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1439,7 +1437,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1447,7 +1445,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1456,6 +1454,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1483,10 +1485,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
@@ -1495,7 +1493,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1507,11 +1513,63 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1519,11 +1577,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
+                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1532,62 +1590,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
              
               <li class="article-tag-list-item">

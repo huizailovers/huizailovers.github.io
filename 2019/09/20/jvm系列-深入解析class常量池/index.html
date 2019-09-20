@@ -6,22 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>io多路复用 | 张春辉个人博客</title>
+  <title>jvm系列-深入解析class常量池 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="用户空间，内核空间123str = &quot;my string&quot; // 用户空间x = x + 2 file.write(str) // 切换到内核空间 y = x + 4 // 切换回用户空间  缓存io 读操作： 如果内核空间中有数据，直接返回给用户空间，内核空间没，从磁盘中读取，缓存到内核空间 写操作： 从用户空间写到内核空间，表示写完成，至于内核空间到用户空间，则是系统决定，减少了io次数  同">
-<meta name="keywords" content="redis io多路复用实现">
+  <meta name="description" content="常量池中的存放格式cp_info 数据结构   tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等 info[] long和double如何存储的需要8个字节。 string字符串如何存储需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和">
 <meta property="og:type" content="article">
-<meta property="og:title" content="io多路复用">
-<meta property="og:url" content="http://yoursite.com/2019/08/18/io多路复用/index.html">
+<meta property="og:title" content="jvm系列-深入解析class常量池">
+<meta property="og:url" content="http://yoursite.com/2019/09/20/jvm系列-深入解析class常量池/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
-<meta property="og:description" content="用户空间，内核空间123str = &quot;my string&quot; // 用户空间x = x + 2 file.write(str) // 切换到内核空间 y = x + 4 // 切换回用户空间  缓存io 读操作： 如果内核空间中有数据，直接返回给用户空间，内核空间没，从磁盘中读取，缓存到内核空间 写操作： 从用户空间写到内核空间，表示写完成，至于内核空间到用户空间，则是系统决定，减少了io次数  同">
+<meta property="og:description" content="常量池中的存放格式cp_info 数据结构   tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等 info[] long和double如何存储的需要8个字节。 string字符串如何存储需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和">
 <meta property="og:locale" content="golang，java">
-<meta property="og:image" content="c:%5CUsers%5Chschu%5CAppData%5CLocal%5CTemp%5C1566113175893.png">
-<meta property="og:updated_time" content="2019-08-18T08:02:06.809Z">
+<meta property="og:updated_time" content="2019-09-20T03:52:30.884Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="io多路复用">
-<meta name="twitter:description" content="用户空间，内核空间123str = &quot;my string&quot; // 用户空间x = x + 2 file.write(str) // 切换到内核空间 y = x + 4 // 切换回用户空间  缓存io 读操作： 如果内核空间中有数据，直接返回给用户空间，内核空间没，从磁盘中读取，缓存到内核空间 写操作： 从用户空间写到内核空间，表示写完成，至于内核空间到用户空间，则是系统决定，减少了io次数  同">
-<meta name="twitter:image" content="c:%5CUsers%5Chschu%5CAppData%5CLocal%5CTemp%5C1566113175893.png">
+<meta name="twitter:title" content="jvm系列-深入解析class常量池">
+<meta name="twitter:description" content="常量池中的存放格式cp_info 数据结构   tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等 info[] long和double如何存储的需要8个字节。 string字符串如何存储需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -157,67 +154,49 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-io多路复用" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-jvm系列-深入解析class常量池" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      io多路复用
+      jvm系列-深入解析class常量池
     </h1>
   
 
         
-        <a href="/2019/08/18/io多路复用/" class="archive-article-date">
-  	<time datetime="2019-08-18T06:41:15.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-18</time>
+        <a href="/2019/09/20/jvm系列-深入解析class常量池/" class="archive-article-date">
+  	<time datetime="2019-09-20T03:24:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-20</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="用户空间，内核空间"><a href="#用户空间，内核空间" class="headerlink" title="用户空间，内核空间"></a>用户空间，内核空间</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">str = <span class="string">"my string"</span> <span class="comment">// 用户空间</span></span><br><span class="line">x = x + <span class="number">2</span> file.write(str) <span class="comment">// 切换到内核空间 </span></span><br><span class="line">y = x + <span class="number">4</span> <span class="comment">// 切换回用户空间</span></span><br></pre></td></tr></table></figure>
+        <h3 id="常量池中的存放格式"><a href="#常量池中的存放格式" class="headerlink" title="常量池中的存放格式"></a>常量池中的存放格式</h3><p>cp_info 数据结构 </p>
+<p> tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等</p>
+<p>info[]</p>
+<h3 id="long和double如何存储的"><a href="#long和double如何存储的" class="headerlink" title="long和double如何存储的"></a>long和double如何存储的</h3><p>需要8个字节。</p>
+<h3 id="string字符串如何存储"><a href="#string字符串如何存储" class="headerlink" title="string字符串如何存储"></a>string字符串如何存储</h3><p>需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和constant_utf8_info 字符串真正存放的位置 </p>
+<h3 id="类信息如何被存储的"><a href="#类信息如何被存储的" class="headerlink" title="类信息如何被存储的"></a>类信息如何被存储的</h3><p>需要constant_string_info  存储一个索引指向 constant_class_info 指向类路径需要注意的是全限定名存放的是com///</p>
+<h3 id="常量池表示的范围"><a href="#常量池表示的范围" class="headerlink" title="常量池表示的范围"></a>常量池表示的范围</h3><p>字面量</p>
+<p>符号引用： constant_class_info. constant_filedref_info. constant_methodref_info  三种</p>
+<p>constant_class_info：类和结构的全限定名</p>
+<p>constant_filedref_info ：字段的名称和描述符</p>
+<p>constant_methodref_info  ：方法的名称和描述符</p>
+<h3 id="哪些字面量会存放到常量池中？"><a href="#哪些字面量会存放到常量池中？" class="headerlink" title="哪些字面量会存放到常量池中？"></a>哪些字面量会存放到常量池中？</h3><p>final修饰的基本类型</p>
+<p>8中基本类型 中 double float long</p>
+<p>字符串类型的字面量</p>
+<h3 id="class文件中特殊的字符串"><a href="#class文件中特殊的字符串" class="headerlink" title="class文件中特殊的字符串"></a>class文件中特殊的字符串</h3><p>类的全限定名</p>
+<p>字段和方法的描述符</p>
+<p>特殊方法的方法名 <init> <clinit></clinit></init></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassConstant</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> Date date = <span class="keyword">new</span> Date(<span class="number">1</span>); <span class="comment">//class cp_class_info  fieldRef nameAndType </span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>; <span class="comment">//fieldref  nameAndType</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">long</span> b = <span class="number">20</span>;<span class="comment">//fieldRef  nameAndType</span></span><br><span class="line">	<span class="keyword">public</span> String nameString = <span class="string">"hello"</span>; <span class="comment">//fieldRef cp_class_info nameAndType    </span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Math math; <span class="comment">// nameAndType   没有fieldRef</span></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getSize</span><span class="params">()</span> </span>&#123; </span><br><span class="line">		<span class="keyword">return</span> a;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h3 id="缓存io"><a href="#缓存io" class="headerlink" title="缓存io"></a>缓存io</h3><ul>
-<li>读操作： 如果内核空间中有数据，直接返回给用户空间，内核空间没，从磁盘中读取，缓存到内核空间</li>
-<li>写操作： 从用户空间写到内核空间，表示写完成，至于内核空间到用户空间，则是系统决定，减少了io次数</li>
-</ul>
-<h3 id="同步，异步io（数据交互方式）"><a href="#同步，异步io（数据交互方式）" class="headerlink" title="同步，异步io（数据交互方式）"></a>同步，异步io（数据交互方式）</h3><ul>
-<li>同步： 用户线程想要得数据，必须等到系统空间给到，才会继续向下执行</li>
-<li>异步： 用户线程不需要等待系统空间数据，向下继续执行</li>
-</ul>
-<h3 id="阻塞，非阻塞io-（io方式）"><a href="#阻塞，非阻塞io-（io方式）" class="headerlink" title="阻塞，非阻塞io （io方式）"></a>阻塞，非阻塞io （io方式）</h3><ul>
-<li>用户空间通过系统调用和内核空间发生数据交互的时候是阻塞的</li>
-<li></li>
-<li>用户空间通过系统调用和内核空间发生数据交互的时候是直接返回的，不管有没有数据</li>
-</ul>
-<h3 id="reactor-反应器"><a href="#reactor-反应器" class="headerlink" title="reactor 反应器"></a>reactor 反应器</h3><ul>
-<li>客户端接收到请求的时候，一个线程来接收所有的请求，然后交给工作线程来处理数据。</li>
-<li>为啥使用，多线程创建和销毁线程消耗资源。</li>
-</ul>
-<h3 id="reator-原理"><a href="#reator-原理" class="headerlink" title="reator 原理"></a>reator 原理</h3><p><img src="C:%5CUsers%5Chschu%5CAppData%5CLocal%5CTemp%5C1566113175893.png" alt="1566113175893"></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//注册事件到reator，添加到select的内核态中</span></span><br><span class="line">Reactor.<span class="keyword">register</span>(<span class="keyword">new</span> UserEventHandler(socket));</span><br><span class="line"><span class="comment">//遍历循环select，获取准备好的事件 （socket 可读）</span></span><br><span class="line">Reactor::handle_events() &#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;  <span class="comment">//循环获取select 数据</span></span><br><span class="line">        sockets = select(); </span><br><span class="line">        <span class="keyword">for</span>(socket in sockets) &#123;</span><br><span class="line">            get_event_handler(socket).handle_event();</span><br><span class="line">        &#125; </span><br><span class="line">    &#125; </span><br><span class="line">&#125; </span><br><span class="line"><span class="comment">//从内核空间到用户空间读取数据</span></span><br><span class="line">read（socket，buffer）</span><br><span class="line">processBuffer（）；</span><br></pre></td></tr></table></figure>
 
-<h3 id="redis-io多路复用"><a href="#redis-io多路复用" class="headerlink" title="redis io多路复用"></a>redis io多路复用</h3><ul>
-<li>io多路复用： 是一种机制，可以监控多个描述符，一旦一个描述符就绪，通知程序来执行</li>
-<li>io多路复用使用 select poll epoll 机制。redis使用的是 epoll</li>
-<li>为什么使用  redis，单线程接收用户请求，单io阻塞读写的时候，无法正常的提供服务。</li>
-</ul>
-<h3 id="select-poll-epoll"><a href="#select-poll-epoll" class="headerlink" title="select poll epoll"></a>select poll epoll</h3><ul>
-<li>select 和poll 的缺点<ul>
-<li>每次都要把全量的句柄集合copy到内核空间</li>
-<li>遍历select的时候，每次都要遍历所有的句柄，并不是已经完成的句柄</li>
-<li>select 每次只能监听 1024个 句柄</li>
-</ul>
-</li>
-<li>epoll 做了优化<ul>
-<li>epoll_create 创建了一棵二叉树 （全部的句柄）和一个双向链表（完成的句柄）</li>
-<li>epoll_ctl 从二叉树移除完成的数据，添加到双向链表</li>
-<li>epoll_await 遍历双向链表，取出的是已经完成的句柄</li>
-</ul>
-</li>
-</ul>
+
+
+
 
       
 
@@ -247,17 +226,6 @@
     <div class="article-info article-info-index">
       
       
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">redis io多路复用实现</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
       
 
       
@@ -308,7 +276,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/08/18/io多路复用/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/20/jvm系列-深入解析class常量池/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -322,18 +290,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/08/20/深入了解jvm系列-JIT编译器/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          深入了解jvm系列-JIT编译器
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/08/14/redis-常见问题/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">redis-常见问题</div>
+    <a href="/2019/09/10/zk系列-技术内幕/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">zk系列-技术内幕</div>
       <i class="icon-circle-right"></i>
     </a>
   
