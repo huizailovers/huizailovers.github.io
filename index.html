@@ -152,6 +152,304 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-kafka系列-原理解析" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/25/kafka系列-原理解析/">kafka系列-原理解析</a>
+    </h1>
+  
+
+        
+        <a href="/2019/09/25/kafka系列-原理解析/" class="archive-article-date">
+  	<time datetime="2019-09-25T06:22:16.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-25</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="消息写入算法"><a href="#消息写入算法" class="headerlink" title="消息写入算法"></a>消息写入算法</h3><ul>
+<li>首先 producer 向broker 提交连接请求，boker找到对应的bokercontroller。</li>
+<li>producer 向contorller 发送请求。controller找到对应 partiton的leader列表。返回给producer。</li>
+<li>prodcuer 根据路由消息策略。找到对应的partition的leader</li>
+<li>leader 通知所有在isr的follower 。follwer 发送ack</li>
+<li>收到ack增加 hw。 表示消费者可以消费该位置</li>
+</ul>
+<h3 id="消息路由策略"><a href="#消息路由策略" class="headerlink" title="消息路由策略"></a>消息路由策略</h3><ul>
+<li>若指定了 partition。则直接写入到指定的parittion</li>
+<li>若没有指定，根据key。key的hash值和paritition的数量去模。该结果就是对应的partition的索引</li>
+<li>若partition和key都没有指定。轮询算法算出一个parititon</li>
+</ul>
+<h3 id="HW-截断机制（保证了leader和follower的数据一致性）"><a href="#HW-截断机制（保证了leader和follower的数据一致性）" class="headerlink" title="HW 截断机制（保证了leader和follower的数据一致性）"></a>HW 截断机制（保证了leader和follower的数据一致性）</h3><ul>
+<li>leader 收到消息。down机了。又恢复的时候</li>
+<li>将LEO 回到宕机的时候的HW。然后再与新的leader进行数据同步，更新 hw。</li>
+<li>该机制可能会引发消息的丢失  leader 接收到的消息会丢失。</li>
+</ul>
+<h3 id="消息发送的可靠性机制"><a href="#消息发送的可靠性机制" class="headerlink" title="消息发送的可靠性机制"></a>消息发送的可靠性机制</h3><ul>
+<li>ack值 =0  生成者发送消息。但是不需要kafka 反馈成功ack<ul>
+<li>网络原因，可能消息根本就没有达到kafka。但是生产者不知道。丢失大量消息</li>
+<li>在borker 中丢失，当broker 缓存满的时候。正准备给partition中写入的时候。消息会丢失</li>
+</ul>
+</li>
+<li>ack =1 取1的时候默认值。partition leader 在接收到消息的时候 马上发送ack。生产者收到后。知道消息发送成功。如果没有收到ack。生产者会认为消息发送失败，重发<ul>
+<li>会存在消息丢失。leader 发送了ack，然后挂掉了。选出新leader。hw 阶段机制</li>
+</ul>
+</li>
+<li>ack = -1 的时候。等到 parition中的所有的isr列表中的所有副本都同步消息完成后，才会向生产者发送ack<ul>
+<li>消息很少丢失。但是会存在消息重复接收的情况。leader 接收到消息。同步给所有的 follower。同步完成但是没有响应ack的时候，挂掉。生产者重新发送消息过来。会出先消息重复接收（我们可以自己定义去重机制，自定义消息唯一标识）</li>
+</ul>
+</li>
+</ul>
+<h3 id="消费者消费过程"><a href="#消费者消费过程" class="headerlink" title="消费者消费过程"></a>消费者消费过程</h3><ul>
+<li><p>消费者想borker集群发送链接请求，返回bokercontorller</p>
+</li>
+<li><p>borkercontroller 会根据消费者topic 选取对应的partiton leader返给消费者</p>
+</li>
+<li><p>消费者消费消息以后会提交offset 偏移量</p>
+</li>
+</ul>
+<h3 id="partition-leader-选举范围"><a href="#partition-leader-选举范围" class="headerlink" title="partition leader 选举范围"></a>partition leader 选举范围</h3><ul>
+<li>leader 宕机从 isr 列表中选取副本 当isr 列表中没有副本节点 配置unclean.leader.election.enable属性</li>
+<li>false的时候，必须等到isr列表中有节点后，才能选举</li>
+<li>true的时候，选出osr列表中存放的节点，因为osr列表中的节点跟原leader的同步是不一致的，会导致消息丢失。可靠性是不能保证的。 </li>
+</ul>
+<p>###重复消费问题和解决方案</p>
+<ul>
+<li>同一个consumer的重复消费： 当消费者没有提交offset的时候，但是已经消费了。但是borker是不知道的。解决方案：延长提交的时间</li>
+<li>不同的consumser的重复消费：同一个消费者组中的消费者消费后还没有提交offset的时候，rebalance了，这个时候该条消息会被其他的消费者再次消费掉。</li>
+</ul>
+<h3 id="消费者提交offset的方式"><a href="#消费者提交offset的方式" class="headerlink" title="消费者提交offset的方式"></a>消费者提交offset的方式</h3><ul>
+<li><ol>
+<li>自动提交</li>
+</ol>
+</li>
+<li>2.手动提交</li>
+</ul>
+<p>### </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/09/25/kafka系列-原理解析/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-kafka系列-基本术语" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/25/kafka系列-基本术语/">kafka系列-基本术语</a>
+    </h1>
+  
+
+        
+        <a href="/2019/09/25/kafka系列-基本术语/" class="archive-article-date">
+  	<time datetime="2019-09-25T02:43:23.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-25</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="高吞吐率"><a href="#高吞吐率" class="headerlink" title="高吞吐率"></a>高吞吐率</h3><ul>
+<li>顺序读写</li>
+<li>零copy</li>
+<li>批量发送</li>
+<li>压缩消息</li>
+</ul>
+<h3 id="基本术语"><a href="#基本术语" class="headerlink" title="基本术语"></a>基本术语</h3><ul>
+<li><p>broker  kafka节点</p>
+</li>
+<li><p>topic 主题 逻辑上概念</p>
+</li>
+<li><p>partition 主题对应到物理存储上 。一个topic 至少一个partition 。在某个partition中的消息是有序的。多分区小没有办法保证消息的有序性 分区本身是 FIFO。一般 分区数量是borker的整数倍</p>
+</li>
+<li><p>segment 将partiton 细分为段，（三个文件一套 *,index *.log ）每个段的最大存储值是相同的</p>
+<p>通过二分查找找到对应的 文件log 然后根据 index文件中存储的偏移量 找到对应的log中的偏移量</p>
+<p>log 文件的最大大小配置在配置文件中log.segment.byte</p>
+</li>
+<li><p>consumer 消费者： 一个消费者可消费多个topic，也可以消费同一个topic中的多个parition中的消息。一个分区中的消息运行多个无关的消费者同时消费。</p>
+</li>
+<li><p>cosumergorup：消费者组  组内的消费者会协调在一起，平均消费分区。对分区的消费是平均的。但是对消息的消费不是平均的。某个消费者只能消费一个pairtition中的消息。</p>
+</li>
+<li><p>producer 生产者： 生成的消息默认是平均分的。也可以指定写到某个partition。也可以根据消息的key 当作路由算出来写到某个分区</p>
+</li>
+<li><p>分区副本： 防止消息丢失做的 分区的备份。需要注意的是 备份得在不同的机器上。</p>
+</li>
+<li><p>partition leader ：多个副本 得有一个 leader。负责当前消息的读写的partition。broker controller 负责leader 的选举</p>
+</li>
+<li><p>partition follower：主备 消息 follower 不是主从。不对外提供服务</p>
+</li>
+<li><p>isr 副本的同步列表 get /brokers/topics/java/partitions/state 得到 一个  isr ：【2，1】 列表  leader 的节点下标 leader “2”</p>
+</li>
+<li><p>offest ：每条消息都有一个当前parittion下的唯一的一个64字节的偏移量。先根据index下索引文件找到对应的偏移量。根据偏移量找到对应的消息的地址值。</p>
+</li>
+<li><p>broker controller  broker有一个被选举为controller。负责管理 partition和 replicas的状态 例如 partition leader 故障，由controller 负责从isr的 follower中选举出一个新的leader 。当某个partition数量发生变化的时候，controller来负责重新分配消费者。 </p>
+</li>
+<li><p>Hw 与 Leo </p>
+<p>hw 表示consumer可以消费到的最高的 partition偏移量。为了保证 partiton中leader和follower的数据一致性</p>
+<p>leo表示 follower 当前最后一个写入消息的位置。</p>
+<p>leader新写入的消息。consumer不能立刻消费。等到同步完成后，更新hw 。消息才能被消费</p>
+</li>
+<li><p>coordinator </p>
+<p>borker上的一个线程。用于管理consumer gorup中的各个成员。主要作用域offset位移的管理和rebalance。可以管理多个消费者组</p>
+</li>
+<li><p>rebalance ：当分区数量发生变化的时候，将partiton重新分配到不同的消费者。 </p>
+</li>
+<li><p>offset commit ： consumer 从partition中取出一批消息写入到buffer 对其进行消费。 在规定的时间内消费完消息后，自动提交消费消息的offset给broker。broker记录下哪些消息是消费过的。</p>
+<p>key 消费者id  message 消息序号。消费者id是不会重复的。在放入的时候，将offset放入到partitotn中的时候，计算出key的hash值与50 去模。余数为响应的partiton。当rebanlance后，通过coordinator来读取到指定的消费位置。继续向下消费。</p>
+</li>
+</ul>
+<h3 id="早期kafka的-parttition脑裂问题"><a href="#早期kafka的-parttition脑裂问题" class="headerlink" title="早期kafka的 parttition脑裂问题"></a>早期kafka的 parttition脑裂问题</h3><p>产生原因： 早期将所有的partition注册到zk中，通过监听子节点列表的变化来选出某个paritition为leader。当zk和 partition中的leader出现网络问题的时候，会重新选举出新的leader。但是原leader是假死，并不是真挂了。出现了两个leader。</p>
+<p>解决方案：新选举出的leader 延迟一会儿。和集群中的其他partition进行通信。就能解决脑裂引起的数据不一致问题</p>
+<p>目前：新版本的是通过 brokercontroller来进行leader的选举，并且所有的请求都会先经过brokercontroller来通知到对应的partition中的leader来消费或者生成消息。不会出现脑裂问题</p>
+<h3 id="集群之间是如何通信的？"><a href="#集群之间是如何通信的？" class="headerlink" title="集群之间是如何通信的？"></a>集群之间是如何通信的？</h3><p>通过zk  每一个broker将自己的配置信息提交到了zk中 get /borker/ids/0 这种。获取到host 主机ip </p>
+<h3 id="kafka-算法演示"><a href="#kafka-算法演示" class="headerlink" title="kafka 算法演示"></a>kafka 算法演示</h3><p>broker 连接到 zk。所有的consumer 也是连接到zk。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/09/25/kafka系列-基本术语/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-深入解析netty系列之-手写rpc和dubbo框架" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/24/深入解析netty系列之-手写rpc和dubbo框架/">深入解析netty系列之-手写rpc和dubbo框架</a>
+    </h1>
+  
+
+        
+        <a href="/2019/09/24/深入解析netty系列之-手写rpc和dubbo框架/" class="archive-article-date">
+  	<time datetime="2019-09-24T07:26:44.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-24</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/09/24/深入解析netty系列之-手写rpc和dubbo框架/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-jvm系列-深入解析class常量池" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -907,254 +1205,6 @@
 
 
   
-    <article id="post-设计模式总结" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/27/设计模式总结/">设计模式总结</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/27/设计模式总结/" class="archive-article-date">
-  	<time datetime="2019-08-26T23:36:32.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-27</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/27/设计模式总结/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-并发编程系列-CHM" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/21/并发编程系列-CHM/">并发编程系列-CHM</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/21/并发编程系列-CHM/" class="archive-article-date">
-  	<time datetime="2019-08-20T22:49:12.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <ul>
-<li>CHM<ul>
-<li>collections.sychroniedMap()</li>
-</ul>
-</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/21/并发编程系列-CHM/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-深入了解jvm系列-JIT编译器" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/20/深入了解jvm系列-JIT编译器/">深入了解jvm系列-JIT编译器</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/20/深入了解jvm系列-JIT编译器/" class="archive-article-date">
-  	<time datetime="2019-08-20T14:10:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-20</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="静态编译，动态编译，动态解释"><a href="#静态编译，动态编译，动态解释" class="headerlink" title="静态编译，动态编译，动态解释"></a>静态编译，动态编译，动态解释</h3><ul>
-<li>静态编译： c++程序运行前，将代码编译成机器码，也叫事前编译</li>
-<li>动态编译： JIT编译器，程序运行时，将java字节码编译成机器码</li>
-<li>动态解释： 程序运行过程中，逐行将字节码解释成机器码</li>
-</ul>
-<h3 id="为什么需要JIT编译器和解释器并存？"><a href="#为什么需要JIT编译器和解释器并存？" class="headerlink" title="为什么需要JIT编译器和解释器并存？"></a>为什么需要JIT编译器和解释器并存？</h3><ul>
-<li>编译器，适用于热点代码，不用每次都逐行解释，但是编译后的结果需要放到方法区中，占用内存。</li>
-<li>解释器，不用占用内存，但是每次都编译，效率低</li>
-<li>两者结合，各取所长</li>
-</ul>
-<h3 id="什么样的代码会被编译？"><a href="#什么样的代码会被编译？" class="headerlink" title="什么样的代码会被编译？"></a>什么样的代码会被编译？</h3><ul>
-<li>多长运行的方法</li>
-<li>多次执行的循环体</li>
-</ul>
-<h3 id="如何判断时热点代码？"><a href="#如何判断时热点代码？" class="headerlink" title="如何判断时热点代码？"></a>如何判断时热点代码？</h3><ul>
-<li>基于计数器采样，方法调用计数器（方法区）和回边计数器（循环体中）</li>
-<li>执行的次数超过10000次。clien运行的时候 超过1500次</li>
-<li>c1和c2的区别，client compiler 注重编译速度，server compiler 注重编译质量</li>
-</ul>
-<h3 id="jit编译器的优化"><a href="#jit编译器的优化" class="headerlink" title="jit编译器的优化"></a>jit编译器的优化</h3><ul>
-<li><p>消除公共子表达式</p>
-<p> int d = (c<em>b)</em>12+a+(a+b*c);  //将cb 用E替换</p>
-<p>int d = E<em>13+a</em>2; </p>
-</li>
-<li><p>方法内联</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">add4</span><span class="params">(<span class="keyword">int</span> x1, <span class="keyword">int</span> x2, <span class="keyword">int</span> x3, <span class="keyword">int</span> x4)</span> </span>&#123;</span><br><span class="line"><span class="keyword">return</span> add2(x1, x2) + add2(x3, x4);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">add2</span><span class="params">(<span class="keyword">int</span> x1, <span class="keyword">int</span> x2)</span> </span>&#123;</span><br><span class="line"><span class="keyword">return</span> x1 + x2; &#125;</span><br><span class="line"><span class="comment">//编译器优化后</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">add4</span><span class="params">(<span class="keyword">int</span> x1, <span class="keyword">int</span> x2, <span class="keyword">int</span> x3, <span class="keyword">int</span> x4)</span> </span>&#123;</span><br><span class="line"><span class="keyword">return</span> x1 + x2 + x3 + x4; &#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>逃逸分析 -XX:+DoEscapeAnalysis  jdk 1.7 以后默认开启了逃逸分析 </p>
-<ul>
-<li><p>对象栈上内存分配</p>
-<p>对象不会逃逸到方法外的时候，将对象从堆内存分配改为栈内存分配，减少堆内存占用和gc</p>
-</li>
-<li><p>标量替换</p>
-<p>对象不被外界访问的时候，拆解成若干个成员变量。减少gc</p>
-</li>
-<li><p>消除同步锁  （-XX:-EliminateLocks ）</p>
-<p>只有一个线程在访问的时候，没有必要获取锁，消除掉同步锁。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getString</span><span class="params">(String s1, String s2)</span> </span>&#123;</span><br><span class="line">StringBuffer sb = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">sb.append(s1);</span><br><span class="line">sb.append(s2);</span><br><span class="line"><span class="keyword">return</span> sb.toString();</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-</ul>
-</li>
-</ul>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">JIT编译器</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/20/深入了解jvm系列-JIT编译器/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -1260,6 +1310,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">java类加载那些事</a>
               </li>
              
@@ -1268,15 +1322,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1288,11 +1338,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
+                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1300,11 +1350,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1312,11 +1358,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1324,7 +1370,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1332,7 +1378,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1345,10 +1399,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">constructor-arg ，property</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1372,19 +1422,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1392,7 +1434,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1400,11 +1442,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1412,15 +1458,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
+                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
