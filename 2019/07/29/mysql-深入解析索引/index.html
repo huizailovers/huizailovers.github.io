@@ -8,17 +8,17 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>mysql-深入解析索引 | 张春辉个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="创建索引场景 主键自动创建索引 频繁查询条件 多表关联，关联字段创建索引。两边都创建，不然索引失效 排序字段创建索引 覆盖索引 分组创建索引  组合索引 优势：省空间，容易形成覆盖索引  最左前缀（最左n个字段，也可以是字符串索引最左m个字符）   索引覆盖 直接可以在索引树返回结果，不需要回表 select name from user ；   索引下推 mysql5.6后，将sqlserver">
+  <meta name="description" content="###索引存储结构  B树和B+tree  区别：首先都是平衡查找树 平衡指的是，除了叶子节点，其他的节点都是满的。最后一层靠左排放。查找指的是左子节点小于父节点。右子节点大于父节点。Btree非叶子节点存放数据。B+tree 只有叶子节点才会存放数据。并且叶子节点会通过链表来串起来   稀疏索引和密集索引   区别：稀疏节点叶子节点存放的是数据的地址值i。密集索引叶子节点存放的是数据 myisa">
 <meta property="og:type" content="article">
 <meta property="og:title" content="mysql-深入解析索引">
 <meta property="og:url" content="http://yoursite.com/2019/07/29/mysql-深入解析索引/index.html">
 <meta property="og:site_name" content="张春辉个人博客">
-<meta property="og:description" content="创建索引场景 主键自动创建索引 频繁查询条件 多表关联，关联字段创建索引。两边都创建，不然索引失效 排序字段创建索引 覆盖索引 分组创建索引  组合索引 优势：省空间，容易形成覆盖索引  最左前缀（最左n个字段，也可以是字符串索引最左m个字符）   索引覆盖 直接可以在索引树返回结果，不需要回表 select name from user ；   索引下推 mysql5.6后，将sqlserver">
+<meta property="og:description" content="###索引存储结构  B树和B+tree  区别：首先都是平衡查找树 平衡指的是，除了叶子节点，其他的节点都是满的。最后一层靠左排放。查找指的是左子节点小于父节点。右子节点大于父节点。Btree非叶子节点存放数据。B+tree 只有叶子节点才会存放数据。并且叶子节点会通过链表来串起来   稀疏索引和密集索引   区别：稀疏节点叶子节点存放的是数据的地址值i。密集索引叶子节点存放的是数据 myisa">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-08-27T02:03:13.910Z">
+<meta property="og:updated_time" content="2019-09-26T10:43:55.576Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mysql-深入解析索引">
-<meta name="twitter:description" content="创建索引场景 主键自动创建索引 频繁查询条件 多表关联，关联字段创建索引。两边都创建，不然索引失效 排序字段创建索引 覆盖索引 分组创建索引  组合索引 优势：省空间，容易形成覆盖索引  最左前缀（最左n个字段，也可以是字符串索引最左m个字符）   索引覆盖 直接可以在索引树返回结果，不需要回表 select name from user ；   索引下推 mysql5.6后，将sqlserver">
+<meta name="twitter:description" content="###索引存储结构  B树和B+tree  区别：首先都是平衡查找树 平衡指的是，除了叶子节点，其他的节点都是满的。最后一层靠左排放。查找指的是左子节点小于父节点。右子节点大于父节点。Btree非叶子节点存放数据。B+tree 只有叶子节点才会存放数据。并且叶子节点会通过链表来串起来   稀疏索引和密集索引   区别：稀疏节点叶子节点存放的是数据的地址值i。密集索引叶子节点存放的是数据 myisa">
   
     <link rel="alternative" href="/atom.xml" title="张春辉个人博客" type="application/atom+xml">
   
@@ -174,7 +174,33 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="创建索引场景"><a href="#创建索引场景" class="headerlink" title="创建索引场景"></a>创建索引场景</h3><ul>
+        <p>###索引存储结构</p>
+<ul>
+<li><p>B树和B+tree</p>
+<ul>
+<li>区别：首先都是平衡查找树 平衡指的是，除了叶子节点，其他的节点都是满的。最后一层靠左排放。查找指的是左子节点小于父节点。右子节点大于父节点。Btree非叶子节点存放数据。B+tree 只有叶子节点才会存放数据。并且叶子节点会通过链表来串起来</li>
+</ul>
+</li>
+<li><p>稀疏索引和密集索引 </p>
+<ul>
+<li>区别：稀疏节点叶子节点存放的是数据的地址值i。密集索引叶子节点存放的是数据</li>
+<li>myisam 使用的是稀疏索引 一共有三个文件 *.frm 表结构文件 *.mdi 索引文件 *.ibd  数据文件 也就是说明数据和索引是分开存储的</li>
+<li>inndb 使用的是密集索引 。索引和数据是存放在一起的。主键索引树的叶子节点存放的是该行的全数据。非主键索引叶子节点存放的是主键值</li>
+</ul>
+</li>
+<li><p>索引覆盖</p>
+<p>通过索引就能得到想要的数据，不需要再次回表（即回到主键索引树）</p>
+<p>select * from t where name = ‘xxx’ name有索引的话也需要回表</p>
+<p>select id，name from t where name = ‘xxx’ 不需要回表。直接返回数据</p>
+</li>
+<li><p>索引下推</p>
+<p>多指的是组合索引。联合索引的时候 name，age 联合索引</p>
+<p>select * from user where name = ‘xx’ age =  12</p>
+<p>早期的做法是 先根据name 查到对应数据。然后回表。然后通过age =12 再去过滤。 但是现在使用联合索引的时候。可以直接在索引树上完成判断。</p>
+</li>
+<li></li>
+</ul>
+<h3 id="创建索引场景"><a href="#创建索引场景" class="headerlink" title="创建索引场景"></a>创建索引场景</h3><ul>
 <li>主键自动创建索引</li>
 <li>频繁查询条件</li>
 <li>多表关联，关联字段创建索引。两边都创建，不然索引失效</li>
@@ -474,11 +500,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -490,6 +516,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
@@ -498,11 +528,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -514,23 +548,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -538,11 +556,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -550,7 +576,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -566,19 +592,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -594,6 +620,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
@@ -602,15 +632,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -622,11 +644,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -638,11 +664,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
+                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">

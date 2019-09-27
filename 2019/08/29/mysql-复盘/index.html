@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="一个sql语句是如何执行的？ 连接器 身份验证，权限验证 缓存模块  DQL 查询语句 会先去缓存中查询，如果有 直接返回 分析器： 词法分析，语法分析。 查询优化器： 索引的选取，过滤条件的执行顺序 执行器： 权限验证，调用存储引擎层的接口去查询数据。  一条更新语句是如何执行的？ 更新数据，调用存储引擎层的接口，存储引擎将数据更新到内存中，并且记录到redolog中。此时redolog处于pr">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-08-30T06:09:10.950Z">
+<meta property="og:updated_time" content="2019-09-27T10:28:53.011Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mysql-复盘">
 <meta name="twitter:description" content="一个sql语句是如何执行的？ 连接器 身份验证，权限验证 缓存模块  DQL 查询语句 会先去缓存中查询，如果有 直接返回 分析器： 词法分析，语法分析。 查询优化器： 索引的选取，过滤条件的执行顺序 执行器： 权限验证，调用存储引擎层的接口去查询数据。  一条更新语句是如何执行的？ 更新数据，调用存储引擎层的接口，存储引擎将数据更新到内存中，并且记录到redolog中。此时redolog处于pr">
@@ -190,6 +190,11 @@
 <li>两阶段提交的话，redolog处于prepare 状态，binlog记录完成。 则redolog提交日志。binlog不完整。 redolog 则回滚事务。</li>
 </ul>
 </li>
+<li>redolog 和binlog<ul>
+<li>redolog 是 innodb 存储引擎层所特有的  物理日志 。通过redolog 和 undolog 来支持事务的。</li>
+<li>binlog 是 sqlserver层的。 逻辑日志。通过binlog 来进行 主从复制使用</li>
+</ul>
+</li>
 </ul>
 <h3 id="什么是幻读？"><a href="#什么是幻读？" class="headerlink" title="什么是幻读？"></a>什么是幻读？</h3><ul>
 <li>一个事务读到另一个事务insert的数据？<ul>
@@ -204,6 +209,108 @@
 </li>
 <li>幻读带来的问题？<ul>
 <li>会导致数据不一致的问题，比如对name = 5 的数据加上了行锁，就是更新name = 5 的所有数据，如果当前事务没有提交，后插入的数据先提交后。更新的时候则是将所有新插入的数据更新了进去。不符合语义。</li>
+</ul>
+</li>
+</ul>
+<h3 id="事务复盘"><a href="#事务复盘" class="headerlink" title="事务复盘"></a>事务复盘</h3><h3 id="redolog"><a href="#redolog" class="headerlink" title="redolog"></a>redolog</h3><p>主要是为了防止down机。当宕机后，进行数据的恢复。保证了数据的持久性</p>
+<h3 id="undolog"><a href="#undolog" class="headerlink" title="undolog"></a>undolog</h3><p>主要是进行数据的回滚。保证数据的原子性。 </p>
+<p>undolog 是存在表空间中的数据。存储格式  rowid 。事务id 数据信息 回滚指针 。根据回滚指针来找到上一个版本的数据。进行回滚</p>
+<h3 id="redolog-和-undlog-是协助使用的-保证了数据的完整性和原子性"><a href="#redolog-和-undlog-是协助使用的-保证了数据的完整性和原子性" class="headerlink" title="redolog 和 undlog 是协助使用的 保证了数据的完整性和原子性"></a>redolog 和 undlog 是协助使用的 保证了数据的完整性和原子性</h3><p>undolog中的数据会记录到redolog中。</p>
+<p>比如一个udpate  先记录当前语句的undolog 到 redologbuffer 然后记录数据的变化。将脏页数据 和 索引页数据 undolog页数据记录到 redolog buffer 。然后 commit的时候 redlog buffer 落盘到 redolog。</p>
+<ul>
+<li><p>1.commit 前宕机。如果没有记录到 redolog中。则根据 表空间中的undolog来进行数据的恢复。</p>
+<ul>
+<li><p>举例。1.update name = 1 wehre age =10</p>
+<p>​    2.update name =2 where age =20 两个sql 第一个commit后 记录到了 redolog 但是第二个还没有提交。没有记录到redolog中。这个时候宕机了。首先根据redolog中恢复数据 将数据恢复到1的状态。以及根据redolog将表空间中的undolog加一条回滚数据。</p>
+</li>
+</ul>
+</li>
+<li><p>2.commit后宕机了。直接根据redolog中的数据来进行数据的恢复即可。同时恢复脏页的数据和undolog中的数据。然后择时落盘。</p>
+</li>
+</ul>
+<h3 id="隔离性的实现"><a href="#隔离性的实现" class="headerlink" title="隔离性的实现"></a>隔离性的实现</h3><p>不同事务直接互不影响。就是隔离的。</p>
+<p>1.脏读：读到已经提交的数据。也就是 读写操作都不加锁</p>
+<p>2.rc ：读已经提交的数据。避免脏读。 </p>
+<p>3.rr：事务开启后，读到的数据都是一致的。解决了不可重复读问题</p>
+<p>上面两种隔离级别是基于mvcc 多版本并发控制 可 view 视图来实现的 undolg</p>
+<p>mvcc 多版本并发控制 。</p>
+<p>​    快照读： 读的是快照。undolog中 不会加锁</p>
+<p>​    当前读： 读的是当前的数据。update语句。都会加锁</p>
+<p>​    一致性非锁定读：通过mvcc读取当前数据库中行数据的方法。遇到update等的时候  不会去等待锁的释放 直接去读的是快照</p>
+<p>4.串行化：任何数据库的操作都加锁</p>
+<h3 id="执行计划"><a href="#执行计划" class="headerlink" title="执行计划"></a>执行计划</h3><ul>
+<li><ol>
+<li>select_type 查询类型。区别普通查询。联合查询。子查询</li>
+<li>type 表示使用到的索引类型。 <ul>
+<li>system 表中只有一行</li>
+<li>const 唯一索引 或者主键索引</li>
+<li>eq_ref 链接字段唯一索引</li>
+<li>ref 等值查询 非主键索引 非唯一索引</li>
+<li>range 索引范围扫描</li>
+<li>index 索引用到了 但是扫描的是全表</li>
+<li>all 全表扫描</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="死锁的产生"><a href="#死锁的产生" class="headerlink" title="死锁的产生"></a>死锁的产生</h3><p>1.在于两个以上的session 加锁的顺序不一致。导致互相等待锁。线程被阻塞。</p>
+<p>解决方案： </p>
+<p>​    1.注意程序的逻辑顺序。最常见的是交叉更新</p>
+<p>​    2.保持事务的轻量。发送死锁的几率越小</p>
+<ol start="3">
+<li>提高运行的速度，避免使用子查询。主键等</li>
+<li>尽量快提交事务。减少持有锁的时间</li>
+</ol>
+<h3 id="mysql性能优化"><a href="#mysql性能优化" class="headerlink" title="mysql性能优化"></a>mysql性能优化</h3><ol>
+<li>开启慢查询日志。</li>
+<li>explian 执行计划分析语句。根据type等分析索引的使用情况</li>
+<li>profile 分析机器性能等</li>
+</ol>
+<h3 id="服务器层面的优化"><a href="#服务器层面的优化" class="headerlink" title="服务器层面的优化"></a>服务器层面的优化</h3><p>   bufferpool 数据保存在内存中。保证从内存中读取数据，减少落盘次数</p>
+<p> 内存预热 ： </p>
+<p>redolog 大一些。降低落盘的次数</p>
+<p>关闭慢查询日志等。</p>
+<p>提高磁盘的读写</p>
+<p>sql的语句优化。，where  组合索引。索引下推，索引覆盖。 等 </p>
+<h3 id="mysql-分库分表"><a href="#mysql-分库分表" class="headerlink" title="mysql 分库分表"></a>mysql 分库分表</h3><ul>
+<li>主从复制<ul>
+<li>事务提交 。redolog 落盘，binlog落盘。两阶段提交。salve 启动一个io线程读取 binlog中的数据到 从节点的relaylog中。任何mysql从节点从启动一个sql‘线程讲relaylog中的数据映射到mysql中、</li>
+</ul>
+</li>
+<li>主从延时<ul>
+<li>sqlThread 和ioThread 是单线程的。当主机的tps 高于从机的thread所能承受的范围的时候。从机复制延迟<ul>
+<li>解决方案：<ul>
+<li>网络延迟的，改成内网</li>
+<li>将thread改成多线程模式</li>
+<li>io延时，slave server硬件升级</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>读写分离<ul>
+<li>主 负责对写</li>
+<li>从 负责读</li>
+</ul>
+</li>
+</ul>
+<h3 id="分库分表"><a href="#分库分表" class="headerlink" title="分库分表"></a>分库分表</h3><p>当表的数量达到了 几百上千的张表的时候。压力比较大，考虑分库</p>
+<p>当表的数据达到了几千万级别的时候，对其进行分库或者分表</p>
+<ul>
+<li>垂直分库： 安装业务模块进行切分。不同的模块表切分到不同的数据库中</li>
+<li>垂直分表： 将一张表拆成多张表。业务上拆分</li>
+<li>水平拆分： 将一张大表拆分成多张小表 <ul>
+<li>按照id取模： 余数决定切分到哪个表中</li>
+<li>按照日期： 按照年月日切分到不同的表中</li>
+<li>按照范围：根据某个字段。按照范围进行切分</li>
+</ul>
+</li>
+<li>分库分表带来的问题：<ul>
+<li>分布式的事务</li>
+<li>分布式的主键</li>
+<li>跨库join等</li>
 </ul>
 </li>
 </ul>
@@ -452,11 +559,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -468,6 +575,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
@@ -476,11 +587,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">executor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -492,23 +607,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">executor</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -516,11 +615,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">事务 mvcc</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -528,7 +635,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
+                <a href="javascript:void(0)" class="js-tag color2">bean 创建流程（scope是singleton）</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -544,19 +651,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
+                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -572,6 +679,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
@@ -580,15 +691,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -600,11 +703,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -616,11 +723,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
+                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
               </li>
              
               <li class="article-tag-list-item">
