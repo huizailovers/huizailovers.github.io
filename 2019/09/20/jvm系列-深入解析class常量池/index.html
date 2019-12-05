@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="常量池中的存放格式cp_info 数据结构   tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等 info[] long和double如何存储的需要8个字节。 string字符串如何存储需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-09-20T03:52:30.884Z">
+<meta property="og:updated_time" content="2019-10-19T06:49:54.553Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="jvm系列-深入解析class常量池">
 <meta name="twitter:description" content="常量池中的存放格式cp_info 数据结构   tag 表示存储的是什么数据类型 。constant_utf8_info constant_integer_info constant_fileldref_info等 info[] long和double如何存储的需要8个字节。 string字符串如何存储需要 constant_string_info 存放了一个索引 索引指向了后面的一个utf8 和">
@@ -193,10 +193,19 @@
 <p>特殊方法的方法名 <init> <clinit></clinit></init></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ClassConstant</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> Date date = <span class="keyword">new</span> Date(<span class="number">1</span>); <span class="comment">//class cp_class_info  fieldRef nameAndType </span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">10</span>; <span class="comment">//fieldref  nameAndType</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">long</span> b = <span class="number">20</span>;<span class="comment">//fieldRef  nameAndType</span></span><br><span class="line">	<span class="keyword">public</span> String nameString = <span class="string">"hello"</span>; <span class="comment">//fieldRef cp_class_info nameAndType    </span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Math math; <span class="comment">// nameAndType   没有fieldRef</span></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getSize</span><span class="params">()</span> </span>&#123; </span><br><span class="line">		<span class="keyword">return</span> a;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<h3 id="javap实例证明常量池中存放的数据"><a href="#javap实例证明常量池中存放的数据" class="headerlink" title="javap实例证明常量池中存放的数据"></a>javap实例证明常量池中存放的数据</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Student</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">study</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Person person = <span class="keyword">new</span> Person();</span><br><span class="line">        person.age =<span class="string">"hello"</span>;</span><br><span class="line">        person.say();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<h3 id="对应的常量池的信息"><a href="#对应的常量池的信息" class="headerlink" title="对应的常量池的信息"></a>对应的常量池的信息</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">Constant pool:</span><br><span class="line">   #1 = Methodref          #8.#18         // java/lang/Object."&lt;init&gt;":()V</span><br><span class="line">   #2 = Class              #19            // compile/Person</span><br><span class="line">   #3 = Methodref          #2.#18         // compile/Person."&lt;init&gt;":()V</span><br><span class="line">   #4 = String             #20            // hello</span><br><span class="line">   #5 = Fieldref           #2.#21         // compile/Person.age:Ljava/lang/String;</span><br><span class="line">   #6 = Methodref          #2.#22         // compile/Person.say:()V</span><br><span class="line">   #7 = Class              #23            // compile/Student</span><br><span class="line">   #8 = Class              #24            // java/lang/Object</span><br><span class="line">   #9 = Utf8               name</span><br><span class="line">  #10 = Utf8               Ljava/lang/String;</span><br><span class="line">  #11 = Utf8               &lt;init&gt;</span><br><span class="line">  #12 = Utf8               ()V</span><br><span class="line">  #13 = Utf8               Code</span><br><span class="line">  #14 = Utf8               LineNumberTable</span><br><span class="line">  #15 = Utf8               study</span><br><span class="line">  #16 = Utf8               SourceFile</span><br><span class="line">  #17 = Utf8               Student.java</span><br><span class="line">  #18 = NameAndType        #11:#12        // "&lt;init&gt;":()V</span><br><span class="line">  #19 = Utf8               compile/Person</span><br><span class="line">  #20 = Utf8               hello</span><br><span class="line">  #21 = NameAndType        #25:#10        // age:Ljava/lang/String;</span><br><span class="line">  #22 = NameAndType        #26:#12        // say:()V</span><br><span class="line">  #23 = Utf8               compile/Student</span><br><span class="line">  #24 = Utf8               java/lang/Object</span><br><span class="line">  #25 = Utf8               age</span><br><span class="line">  #26 = Utf8               say</span><br></pre></td></tr></table></figure>
 
-
-
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ol>
+<li><p>字面量 变量名，FieldnameAndType，字段名称，MethodNameAndType。被final修饰的基本数据类型，</p>
+</li>
+<li><p>符号引用(字节码期间还不知道其他的类在内存中的地址信息。只能用符号引用来代替，存在常量池中被其他方法来调用)</p>
+<p> class_ref</p>
+<p> method_ref</p>
+<p> filed_ref</p>
+</li>
+</ol>
 
       
 
@@ -427,15 +436,47 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">服务容错</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">url 总线</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">服务限流</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">服务暴露</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">结果缓存</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">select()负载均衡</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">显示类型转换，int和string类型之间转换，断言</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color3">spi扩展机制</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">redis io多路复用实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -451,11 +492,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
+                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">sqlSession 执行主流程</a>
+                <a href="javascript:void(0)" class="js-tag color2">加载全局配置文件，加载映射文件。</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -463,7 +504,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -471,19 +512,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">parameterHandler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -491,11 +520,35 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">server 端源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">eureka 源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -503,7 +556,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -515,10 +580,6 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
@@ -527,7 +588,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">知识点总结</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -539,15 +612,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">condition</a>
+                <a href="javascript:void(0)" class="js-tag color4">AtomicInteger</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -559,23 +628,35 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
+                <a href="javascript:void(0)" class="js-tag color1">futureTask</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+                <a href="javascript:void(0)" class="js-tag color5">condition</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
+                <a href="javascript:void(0)" class="js-tag color4">sychronized wait notify</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color5">lock 实现原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">线程池实现原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">JIT编译器</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -587,27 +668,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color1">为不同的问题找到合适的解决方案</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">筛选合适的通知器，创建代理对象，执行invoke方法。</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">springmvc 执行流程</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">缓存中获取bean</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+                <a href="javascript:void(0)" class="js-tag color5">接口编程</a>
               </li>
             
             <div class="clearfix"></div>
