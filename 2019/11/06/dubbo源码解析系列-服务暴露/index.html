@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="入口 serviceConfig#export()1234567891011121314151617181920212223242526public synchronized void export() &amp;#123;       checkAndUpdateSubConfigs();       if (provider != null) &amp;#123;           if (export =">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-12-03T13:30:42.503Z">
+<meta property="og:updated_time" content="2020-01-03T11:14:12.412Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="dubbo源码解析系列-服务暴露">
 <meta name="twitter:description" content="入口 serviceConfig#export()1234567891011121314151617181920212223242526public synchronized void export() &amp;#123;       checkAndUpdateSubConfigs();       if (provider != null) &amp;#123;           if (export =">
@@ -179,11 +179,11 @@
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doExportUrls</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//获取url 不同的version 表示不同的service。不同的 registry 和address中使用地址分割。来获取url</span></span><br><span class="line">        List&lt;URL&gt; registryURLs = loadRegistries(<span class="keyword">true</span>);</span><br><span class="line">        <span class="keyword">for</span> (ProtocolConfig protocolConfig : protocols) &#123;</span><br><span class="line">            <span class="comment">//多协议发布 不同的协议</span></span><br><span class="line">            doExportUrlsFor1Protocol(protocolConfig, registryURLs);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> List&lt;URL&gt; <span class="title">loadRegistries</span><span class="params">(<span class="keyword">boolean</span> provider)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义一个集合</span></span><br><span class="line">        List&lt;URL&gt; registryList = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">    <span class="comment">//对应的&lt;dubbo:registry:&gt;</span></span><br><span class="line">        <span class="keyword">if</span> (registries != <span class="keyword">null</span> &amp;&amp; !registries.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">//获取配置</span></span><br><span class="line">            <span class="keyword">for</span> (RegistryConfig config : registries) &#123;</span><br><span class="line">                <span class="comment">//得到地址</span></span><br><span class="line">                String address = config.getAddress();</span><br><span class="line">                <span class="keyword">if</span> (StringUtils.isEmpty(address)) &#123;</span><br><span class="line">                    address = Constants.ANYHOST_VALUE;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//是不是配置的N/A</span></span><br><span class="line">                <span class="keyword">if</span> (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) &#123;</span><br><span class="line">                    Map&lt;String, String&gt; map = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">                    <span class="comment">//获取application。config path 等配置添加到map中</span></span><br><span class="line">                    appendParameters(map, application);</span><br><span class="line">                    appendParameters(map, config);</span><br><span class="line">                    map.put(<span class="string">"path"</span>, RegistryService.class.getName());</span><br><span class="line">                    appendRuntimeParameters(map);</span><br><span class="line">                    <span class="keyword">if</span> (!map.containsKey(<span class="string">"protocol"</span>)) &#123;</span><br><span class="line">                        map.put(<span class="string">"protocol"</span>, <span class="string">"dubbo"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">//将地址进行切割。然后生成多个URL</span></span><br><span class="line">                    List&lt;URL&gt; urls = UrlUtils.parseURLs(address, map);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">for</span> (URL url : urls) &#123;</span><br><span class="line">                        <span class="comment">//将dubbo协议写到parameter中</span></span><br><span class="line">                        url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());</span><br><span class="line">                        <span class="comment">//将URL中的protocol改为registry</span></span><br><span class="line">                        url = url.setProtocol(Constants.REGISTRY_PROTOCOL);</span><br><span class="line">                        <span class="keyword">if</span> ((provider &amp;&amp; url.getParameter(Constants.REGISTER_KEY, <span class="keyword">true</span>))</span><br><span class="line">                                || (!provider &amp;&amp; url.getParameter(Constants.SUBSCRIBE_KEY, <span class="keyword">true</span>))) &#123;</span><br><span class="line">                            <span class="comment">//添加到 registryList</span></span><br><span class="line">                            registryList.add(url);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> registryList;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> List&lt;URL&gt; <span class="title">loadRegistries</span><span class="params">(<span class="keyword">boolean</span> provider)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义一个集合</span></span><br><span class="line">        List&lt;URL&gt; registryList = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">    <span class="comment">//对应的&lt;dubbo:registry:&gt;</span></span><br><span class="line">        <span class="keyword">if</span> (registries != <span class="keyword">null</span> &amp;&amp; !registries.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">//获取配置</span></span><br><span class="line">            <span class="keyword">for</span> (RegistryConfig config : registries) &#123;</span><br><span class="line">                <span class="comment">//得到地址</span></span><br><span class="line">                String address = config.getAddress();</span><br><span class="line">                <span class="keyword">if</span> (StringUtils.isEmpty(address)) &#123;</span><br><span class="line">                    address = Constants.ANYHOST_VALUE;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">//是不是配置的N/A</span></span><br><span class="line">                <span class="keyword">if</span> (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) &#123;</span><br><span class="line">                    Map&lt;String, String&gt; map = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">                    <span class="comment">//获取application。config path 等配置添加到map中</span></span><br><span class="line">                    appendParameters(map, application);</span><br><span class="line">                    appendParameters(map, config);</span><br><span class="line">                    map.put(<span class="string">"path"</span>, RegistryService.class.getName());</span><br><span class="line">                    appendRuntimeParameters(map);</span><br><span class="line">                    <span class="comment">//协议默认为dubbo</span></span><br><span class="line">                    <span class="keyword">if</span> (!map.containsKey(<span class="string">"protocol"</span>)) &#123;</span><br><span class="line">                        map.put(<span class="string">"protocol"</span>, <span class="string">"dubbo"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="comment">//将地址进行切割。然后生成多个URL</span></span><br><span class="line">                    List&lt;URL&gt; urls = UrlUtils.parseURLs(address, map);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">for</span> (URL url : urls) &#123;</span><br><span class="line">                        <span class="comment">//将dubbo协议写到parameter中</span></span><br><span class="line">                        url = url.addParameter(Constants.REGISTRY_KEY, url.getProtocol());</span><br><span class="line">                        <span class="comment">//将URL中的protocol改为registry</span></span><br><span class="line">                        url = url.setProtocol(Constants.REGISTRY_PROTOCOL);</span><br><span class="line">                        <span class="keyword">if</span> ((provider &amp;&amp; url.getParameter(Constants.REGISTER_KEY, <span class="keyword">true</span>))</span><br><span class="line">                                || (!provider &amp;&amp; url.getParameter(Constants.SUBSCRIBE_KEY, <span class="keyword">true</span>))) &#123;</span><br><span class="line">                            <span class="comment">//添加到 registryList</span></span><br><span class="line">                            registryList.add(url);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> registryList;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> List&lt;URL&gt; <span class="title">parseURLs</span><span class="params">(String address, Map&lt;String, String&gt; defaults)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (address == <span class="keyword">null</span> || address.length() == <span class="number">0</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">       &#125;</span><br><span class="line">    <span class="comment">//	将地址值根据； 进行切割</span></span><br><span class="line">       String[] addresses = Constants.REGISTRY_SPLIT_PATTERN.split(address);</span><br><span class="line">       <span class="keyword">if</span> (addresses == <span class="keyword">null</span> || addresses.length == <span class="number">0</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">null</span>; <span class="comment">//here won't be empty</span></span><br><span class="line">       &#125;</span><br><span class="line">       List&lt;URL&gt; registries = <span class="keyword">new</span> ArrayList&lt;URL&gt;();</span><br><span class="line">       <span class="keyword">for</span> (String addr : addresses) &#123;</span><br><span class="line">           <span class="comment">//parseUrl 生成 URL</span></span><br><span class="line">           registries.add(parseURL(addr, defaults));</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> registries;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
 
-<h4 id="暴露服务"><a href="#暴露服务" class="headerlink" title="暴露服务"></a>暴露服务</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doExportUrlsFor1Protocol</span><span class="params">(ProtocolConfig protocolConfig, List&lt;URL&gt; registryURLs)</span> </span>&#123;</span><br><span class="line">        String name = protocolConfig.getName();</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span> || name.length() == <span class="number">0</span>) &#123;</span><br><span class="line">            name = Constants.DUBBO;</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="comment">//创建一个map</span></span><br><span class="line">        Map&lt;String, String&gt; map = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        map.put(Constants.SIDE_KEY, Constants.PROVIDER_SIDE);<span class="comment">//side= provider</span></span><br><span class="line">     	<span class="comment">//map中添加application， provider，等配置</span></span><br><span class="line">        appendRuntimeParameters(map);</span><br><span class="line">        appendParameters(map, application); <span class="comment">//针对应用 application</span></span><br><span class="line">        appendParameters(map, <span class="keyword">module</span>);</span><br><span class="line">        appendParameters(map, provider, Constants.DEFAULT_KEY);<span class="comment">//&lt;dubbo:provider&gt;</span></span><br><span class="line">        appendParameters(map, protocolConfig);<span class="comment">//协议配置 &lt;dubbo:protocol </span></span><br><span class="line">        appendParameters(map, <span class="keyword">this</span>);</span><br><span class="line">     <span class="comment">//针对方法的配置。方法的优先级高于 provider的优先级</span></span><br><span class="line">        <span class="keyword">if</span> (methods != <span class="keyword">null</span> &amp;&amp; !methods.isEmpty()) &#123; </span><br><span class="line">            <span class="comment">//获取方法的配置</span></span><br><span class="line">            <span class="keyword">for</span> (MethodConfig method : methods) &#123;</span><br><span class="line">                appendParameters(map, method, method.getName());</span><br><span class="line">                String retryKey = method.getName() + <span class="string">".retry"</span>;</span><br><span class="line">                <span class="keyword">if</span> (map.containsKey(retryKey)) &#123;</span><br><span class="line">                    String retryValue = map.remove(retryKey);</span><br><span class="line">                    <span class="keyword">if</span> (<span class="string">"false"</span>.equals(retryValue)) &#123;</span><br><span class="line">                        map.put(method.getName() + <span class="string">".retries"</span>, <span class="string">"0"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                List&lt;ArgumentConfig&gt; arguments = method.getArguments();</span><br><span class="line">            <span class="comment">//是否是泛化调用    </span></span><br><span class="line">        <span class="keyword">if</span> (ProtocolUtils.isGeneric(generic)) &#123;</span><br><span class="line">            map.put(Constants.GENERIC_KEY, generic);</span><br><span class="line">            map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            String revision = Version.getVersion(interfaceClass, version);</span><br><span class="line">            <span class="keyword">if</span> (revision != <span class="keyword">null</span> &amp;&amp; revision.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                map.put(<span class="string">"revision"</span>, revision);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();</span><br><span class="line">            <span class="keyword">if</span> (methods.length == <span class="number">0</span>) &#123;</span><br><span class="line">                logger.warn(<span class="string">"NO method found in service interface "</span> + interfaceClass.getName());</span><br><span class="line">                map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                map.put(Constants.METHODS_KEY, StringUtils.join(<span class="keyword">new</span> HashSet&lt;String&gt;(Arrays.asList(methods)), <span class="string">","</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!ConfigUtils.isEmpty(token)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ConfigUtils.isDefault(token)) &#123;</span><br><span class="line">                map.put(Constants.TOKEN_KEY, UUID.randomUUID().toString());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                map.put(Constants.TOKEN_KEY, token); </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (Constants.LOCAL_PROTOCOL.equals(protocolConfig.getName())) &#123;</span><br><span class="line">            protocolConfig.setRegister(<span class="keyword">false</span>);</span><br><span class="line">            map.put(<span class="string">"notify"</span>, <span class="string">"false"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// export service</span></span><br><span class="line">        String contextPath = protocolConfig.getContextpath();</span><br><span class="line">        <span class="keyword">if</span> ((contextPath == <span class="keyword">null</span> || contextPath.length() == <span class="number">0</span>) &amp;&amp; provider != <span class="keyword">null</span>) &#123;</span><br><span class="line">            contextPath = provider.getContextpath();</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="comment">//获取主机名和端口号</span></span><br><span class="line">        String host = <span class="keyword">this</span>.findConfigedHosts(protocolConfig, registryURLs, map);</span><br><span class="line">        Integer port = <span class="keyword">this</span>.findConfigedPorts(protocolConfig, name, map);</span><br><span class="line">        URL url = <span class="keyword">new</span> URL(name, host, port, (contextPath == <span class="keyword">null</span> || contextPath.length() == <span class="number">0</span> ? <span class="string">""</span> : contextPath + <span class="string">"/"</span>) + path, map);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)</span><br><span class="line">                .hasExtension(url.getProtocol())) &#123;</span><br><span class="line">            url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)</span><br><span class="line">                    .getExtension(url.getProtocol()).getConfigurator(url).configure(url);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        String scope = url.getParameter(Constants.SCOPE_KEY);</span><br><span class="line">        <span class="comment">// don't export when none is configured</span></span><br><span class="line">        <span class="keyword">if</span> (!Constants.SCOPE_NONE.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">            <span class="comment">//本地暴露</span></span><br><span class="line">            <span class="keyword">if</span> (!Constants.SCOPE_REMOTE.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">                exportLocal(url);</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">            <span class="keyword">if</span> (!Constants.SCOPE_LOCAL.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">                    logger.info(<span class="string">"Export dubbo service "</span> + interfaceClass.getName() + <span class="string">" to url "</span> + url);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (registryURLs != <span class="keyword">null</span> &amp;&amp; !registryURLs.isEmpty()) &#123;</span><br><span class="line">                    <span class="comment">//遍历 registryUrl</span></span><br><span class="line">                    <span class="keyword">for</span> (URL registryURL : registryURLs) &#123;</span><br><span class="line">                        url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));</span><br><span class="line">                        URL monitorUrl = loadMonitor(registryURL);</span><br><span class="line">                        <span class="keyword">if</span> (monitorUrl != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">                            logger.info(<span class="string">"Register dubbo service "</span> + interfaceClass.getName() + <span class="string">" url "</span> + url + <span class="string">" to registry "</span> + registryURL);</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="comment">// For providers, this is used to enable custom proxy to generate invoker</span></span><br><span class="line">                        String proxy = url.getParameter(Constants.PROXY_KEY);</span><br><span class="line">                        <span class="keyword">if</span> (StringUtils.isNotEmpty(proxy)) &#123;</span><br><span class="line">                            registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);</span><br><span class="line">                        &#125;</span><br><span class="line"><span class="comment">//生成invoker 是对ref的一个代理类，通过代理类最后调用 invoker方法。</span></span><br><span class="line">                        Invoker&lt;?&gt; invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));</span><br><span class="line">                        DelegateProviderMetaDataInvoker wrapperInvoker = <span class="keyword">new</span> DelegateProviderMetaDataInvoker(invoker, <span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">                        Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);</span><br><span class="line">                        exporters.add(exporter);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//生成invoker</span></span><br><span class="line">                    Invoker&lt;?&gt; invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);</span><br><span class="line">                    DelegateProviderMetaDataInvoker wrapperInvoker = <span class="keyword">new</span> DelegateProviderMetaDataInvoker(invoker, <span class="keyword">this</span>);</span><br><span class="line">					<span class="comment">//暴露出去 先是 RegistryProtocol暴露 然后是DubboProtocol暴露 ，先注册到注册中心</span></span><br><span class="line">                    <span class="comment">//然后再暴露出去 因此需要延迟暴露 </span></span><br><span class="line">                    Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);</span><br><span class="line">                    exporters.add(exporter);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">/**</span></span><br><span class="line"><span class="comment">                 * <span class="doctag">@since</span> 2.7.0</span></span><br><span class="line"><span class="comment">                 * ServiceData Store</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                MetadataReportService metadataReportService = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">if</span> ((metadataReportService = getMetadataReportService()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    metadataReportService.publishProvider(url);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.urls.add(url);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="暴露服务"><a href="#暴露服务" class="headerlink" title="暴露服务"></a>暴露服务</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doExportUrlsFor1Protocol</span><span class="params">(ProtocolConfig protocolConfig, List&lt;URL&gt; registryURLs)</span> </span>&#123;</span><br><span class="line">        String name = protocolConfig.getName();</span><br><span class="line">        <span class="keyword">if</span> (name == <span class="keyword">null</span> || name.length() == <span class="number">0</span>) &#123;</span><br><span class="line">            name = Constants.DUBBO;</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="comment">//创建一个map</span></span><br><span class="line">        Map&lt;String, String&gt; map = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        map.put(Constants.SIDE_KEY, Constants.PROVIDER_SIDE);<span class="comment">//side= provider</span></span><br><span class="line">     	<span class="comment">//map中添加application， provider，等配置</span></span><br><span class="line">        appendRuntimeParameters(map);</span><br><span class="line">        appendParameters(map, application); <span class="comment">//针对应用 application</span></span><br><span class="line">        appendParameters(map, <span class="keyword">module</span>);</span><br><span class="line">        appendParameters(map, provider, Constants.DEFAULT_KEY);<span class="comment">//&lt;dubbo:provider&gt;</span></span><br><span class="line">        appendParameters(map, protocolConfig);<span class="comment">//协议配置 &lt;dubbo:protocol </span></span><br><span class="line">        appendParameters(map, <span class="keyword">this</span>);</span><br><span class="line">     <span class="comment">//针对方法的配置。方法的优先级高于 provider的优先级</span></span><br><span class="line">        <span class="keyword">if</span> (methods != <span class="keyword">null</span> &amp;&amp; !methods.isEmpty()) &#123; </span><br><span class="line">            <span class="comment">//获取方法的配置</span></span><br><span class="line">            <span class="keyword">for</span> (MethodConfig method : methods) &#123;</span><br><span class="line">                appendParameters(map, method, method.getName());</span><br><span class="line">                String retryKey = method.getName() + <span class="string">".retry"</span>;</span><br><span class="line">                <span class="keyword">if</span> (map.containsKey(retryKey)) &#123;</span><br><span class="line">                    String retryValue = map.remove(retryKey);</span><br><span class="line">                    <span class="keyword">if</span> (<span class="string">"false"</span>.equals(retryValue)) &#123;</span><br><span class="line">                        map.put(method.getName() + <span class="string">".retries"</span>, <span class="string">"0"</span>);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                List&lt;ArgumentConfig&gt; arguments = method.getArguments();</span><br><span class="line">            <span class="comment">//是否是泛化调用    </span></span><br><span class="line">        <span class="keyword">if</span> (ProtocolUtils.isGeneric(generic)) &#123;</span><br><span class="line">            map.put(Constants.GENERIC_KEY, generic);</span><br><span class="line">            map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            String revision = Version.getVersion(interfaceClass, version);</span><br><span class="line">            <span class="keyword">if</span> (revision != <span class="keyword">null</span> &amp;&amp; revision.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                map.put(<span class="string">"revision"</span>, revision);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();</span><br><span class="line">            <span class="keyword">if</span> (methods.length == <span class="number">0</span>) &#123;</span><br><span class="line">                logger.warn(<span class="string">"NO method found in service interface "</span> + interfaceClass.getName());</span><br><span class="line">                map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                map.put(Constants.METHODS_KEY, StringUtils.join(<span class="keyword">new</span> HashSet&lt;String&gt;(Arrays.asList(methods)), <span class="string">","</span>));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!ConfigUtils.isEmpty(token)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ConfigUtils.isDefault(token)) &#123;</span><br><span class="line">                map.put(Constants.TOKEN_KEY, UUID.randomUUID().toString());</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                map.put(Constants.TOKEN_KEY, token); </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (Constants.LOCAL_PROTOCOL.equals(protocolConfig.getName())) &#123;</span><br><span class="line">            protocolConfig.setRegister(<span class="keyword">false</span>);</span><br><span class="line">            map.put(<span class="string">"notify"</span>, <span class="string">"false"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// export service</span></span><br><span class="line">        String contextPath = protocolConfig.getContextpath();</span><br><span class="line">        <span class="keyword">if</span> ((contextPath == <span class="keyword">null</span> || contextPath.length() == <span class="number">0</span>) &amp;&amp; provider != <span class="keyword">null</span>) &#123;</span><br><span class="line">            contextPath = provider.getContextpath();</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="comment">//获取主机名和端口号</span></span><br><span class="line">        String host = <span class="keyword">this</span>.findConfigedHosts(protocolConfig, registryURLs, map);</span><br><span class="line">        Integer port = <span class="keyword">this</span>.findConfigedPorts(protocolConfig, name, map);</span><br><span class="line">        URL url = <span class="keyword">new</span> URL(name, host, port, (contextPath == <span class="keyword">null</span> || contextPath.length() == <span class="number">0</span> ? <span class="string">""</span> : contextPath + <span class="string">"/"</span>) + path, map);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)</span><br><span class="line">                .hasExtension(url.getProtocol())) &#123;</span><br><span class="line">            url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)</span><br><span class="line">                    .getExtension(url.getProtocol()).getConfigurator(url).configure(url);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        String scope = url.getParameter(Constants.SCOPE_KEY);</span><br><span class="line">        <span class="comment">// don't export when none is configured</span></span><br><span class="line">        <span class="keyword">if</span> (!Constants.SCOPE_NONE.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">            <span class="comment">//本地暴露</span></span><br><span class="line">            <span class="keyword">if</span> (!Constants.SCOPE_REMOTE.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">                exportLocal(url);</span><br><span class="line">            &#125;</span><br><span class="line"> </span><br><span class="line">            <span class="keyword">if</span> (!Constants.SCOPE_LOCAL.equalsIgnoreCase(scope)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">                    logger.info(<span class="string">"Export dubbo service "</span> + interfaceClass.getName() + <span class="string">" to url "</span> + url);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (registryURLs != <span class="keyword">null</span> &amp;&amp; !registryURLs.isEmpty()) &#123;</span><br><span class="line">                    <span class="comment">//遍历 registryUrl</span></span><br><span class="line">                    <span class="keyword">for</span> (URL registryURL : registryURLs) &#123;</span><br><span class="line">                        url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));</span><br><span class="line">                        URL monitorUrl = loadMonitor(registryURL);</span><br><span class="line">                        <span class="keyword">if</span> (monitorUrl != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">                            logger.info(<span class="string">"Register dubbo service "</span> + interfaceClass.getName() + <span class="string">" url "</span> + url + <span class="string">" to registry "</span> + registryURL);</span><br><span class="line">                        &#125;</span><br><span class="line"></span><br><span class="line">                        <span class="comment">// For providers, this is used to enable custom proxy to generate invoker</span></span><br><span class="line">                        String proxy = url.getParameter(Constants.PROXY_KEY);</span><br><span class="line">                        <span class="keyword">if</span> (StringUtils.isNotEmpty(proxy)) &#123;</span><br><span class="line">                            registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);</span><br><span class="line">                        &#125;</span><br><span class="line"><span class="comment">//生成invoker 是对ref的一个代理类，通过代理类最后调用 invoker方法。</span></span><br><span class="line">                        Invoker&lt;?&gt; invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));</span><br><span class="line"> <span class="comment">//装饰者模式，将invoker  metada 封装成对象。        </span></span><br><span class="line">                        DelegateProviderMetaDataInvoker wrapperInvoker = <span class="keyword">new</span> DelegateProviderMetaDataInvoker(invoker, <span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">                        Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);</span><br><span class="line">                        exporters.add(exporter);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="comment">//生成invoker</span></span><br><span class="line">                    Invoker&lt;?&gt; invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);</span><br><span class="line">                    DelegateProviderMetaDataInvoker wrapperInvoker = <span class="keyword">new</span> DelegateProviderMetaDataInvoker(invoker, <span class="keyword">this</span>);</span><br><span class="line">					<span class="comment">//暴露出去 先是 RegistryProtocol暴露 然后是DubboProtocol暴露 ，先注册到注册中心</span></span><br><span class="line">                    <span class="comment">//然后再暴露出去 因此需要延迟暴露 </span></span><br><span class="line">                    Exporter&lt;?&gt; exporter = protocol.export(wrapperInvoker);</span><br><span class="line">                    exporters.add(exporter);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="comment">/**</span></span><br><span class="line"><span class="comment">                 * <span class="doctag">@since</span> 2.7.0</span></span><br><span class="line"><span class="comment">                 * ServiceData Store</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                MetadataReportService metadataReportService = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">if</span> ((metadataReportService = getMetadataReportService()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    metadataReportService.publishProvider(url);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.urls.add(url);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//protocol 协议</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Exporter&lt;T&gt; <span class="title">export</span><span class="params">(<span class="keyword">final</span> Invoker&lt;T&gt; originInvoker)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">     <span class="comment">//切换了下协议，将协议更换为 dubbo</span></span><br><span class="line">        URL registryUrl = getRegistryUrl(originInvoker);</span><br><span class="line">        <span class="comment">// url to export locally</span></span><br><span class="line">     	<span class="comment">//之前的registry 协议</span></span><br><span class="line">        URL providerUrl = getProviderUrl(originInvoker);</span><br><span class="line">     </span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
 
@@ -195,7 +195,8 @@
 <li>是否延迟暴露</li>
 <li>多注册中心，多个address 生成一个list<url></url></li>
 <li>多协议，注册服务</li>
-<li>将服务提供者缓存起来。创建一个map。维护协议和服务提供者的关系</li>
+<li>将服务提供者缓存起来。创建一个map。维护serviceKey和export的关系</li>
+<li>将服务注册到注册中心</li>
 <li>通过tcp 将服务暴露出去。</li>
 </ol>
 <h3 id="缓存策略"><a href="#缓存策略" class="headerlink" title="缓存策略"></a>缓存策略</h3><ul>
@@ -361,7 +362,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2019 张春辉
+    		&copy; 2020 张春辉
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
@@ -444,15 +445,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">服务容错</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">url 总线</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">服务限流</a>
+                <a href="javascript:void(0)" class="js-tag color5">服务容错</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -460,11 +457,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">结果缓存</a>
+                <a href="javascript:void(0)" class="js-tag color5">服务限流</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">select()负载均衡</a>
+                <a href="javascript:void(0)" class="js-tag color5">结果缓存</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -472,7 +469,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">spi扩展机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">select()负载均衡</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -480,11 +477,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">spi扩展机制</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -492,11 +489,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -508,6 +505,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
@@ -516,11 +525,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
+                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -528,19 +537,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -548,7 +545,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">eureka 源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -560,23 +569,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -588,11 +585,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -600,11 +597,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -612,27 +613,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">AtomicInteger</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -644,11 +633,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">sychronized wait notify</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">lock 实现原理</a>
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -656,11 +653,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+                <a href="javascript:void(0)" class="js-tag color5">lock 实现原理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -668,11 +665,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -680,11 +673,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
              
               <li class="article-tag-list-item">

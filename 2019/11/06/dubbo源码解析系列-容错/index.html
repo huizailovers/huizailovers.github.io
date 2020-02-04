@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="张春辉个人博客">
 <meta property="og:description" content="服务容错 客户端调用服务端（通过负载均衡策略，选取一个最优的服务），调用失败，出现错误的时候，是如何处理的  forking（并行调用，有一个返回成功即可）12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364pub">
 <meta property="og:locale" content="golang，java">
-<meta property="og:updated_time" content="2019-12-03T13:30:11.389Z">
+<meta property="og:updated_time" content="2019-12-31T10:44:00.540Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="dubbo源码解析系列-容错">
 <meta name="twitter:description" content="服务容错 客户端调用服务端（通过负载均衡策略，选取一个最优的服务），调用失败，出现错误的时候，是如何处理的  forking（并行调用，有一个返回成功即可）12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364pub">
@@ -178,7 +178,7 @@
         <h3 id="服务容错"><a href="#服务容错" class="headerlink" title="服务容错"></a>服务容错</h3><ul>
 <li>客户端调用服务端（通过负载均衡策略，选取一个最优的服务），调用失败，出现错误的时候，是如何处理的</li>
 </ul>
-<h4 id="forking（并行调用，有一个返回成功即可）"><a href="#forking（并行调用，有一个返回成功即可）" class="headerlink" title="forking（并行调用，有一个返回成功即可）"></a>forking（并行调用，有一个返回成功即可）</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AvailableClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AvailableClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ExecutorService executor = Executors.newCachedThreadPool(</span><br><span class="line">            <span class="keyword">new</span> NamedInternalThreadFactory(<span class="string">"forking-cluster-timer"</span>, <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function">ublic Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkInvokers(invokers, invocation);</span><br><span class="line">            <span class="keyword">final</span> List&lt;Invoker&lt;T&gt;&gt; selected;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> forks = getUrl().getParameter(Constants.FORKS_KEY, Constants.DEFAULT_FORKS);</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> timeout = getUrl().getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line">            <span class="keyword">if</span> (forks &lt;= <span class="number">0</span> || forks &gt;= invokers.size()) &#123;</span><br><span class="line">                selected = invokers;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                selected = <span class="keyword">new</span> ArrayList&lt;&gt;(); </span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; forks; i++) &#123;</span><br><span class="line">                    <span class="comment">// 负载均衡选取invoker</span></span><br><span class="line">                    Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, selected);</span><br><span class="line">                    <span class="keyword">if</span> (!selected.contains(invoker)) &#123;</span><br><span class="line">                        <span class="comment">//负载均衡 将选取的invoker 添加到 selected集合中</span></span><br><span class="line">                        selected.add(invoker)</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            RpcContext.getContext().setInvokers((List) selected);</span><br><span class="line">            <span class="keyword">final</span> AtomicInteger count = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">            <span class="keyword">final</span> BlockingQueue&lt;Object&gt; ref = <span class="keyword">new</span> LinkedBlockingQueue&lt;&gt;(); <span class="comment">//阻塞队列</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">final</span> Invoker&lt;T&gt; invoker : selected) &#123;</span><br><span class="line">                executor.execute(<span class="keyword">new</span> Runnable() &#123;<span class="comment">//将任务提交到线程池中</span></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            Result result = invoker.invoke(invocation);</span><br><span class="line">                            ref.offer(result); <span class="comment">//将结果添加阻塞对垒中</span></span><br><span class="line">                        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                            <span class="keyword">int</span> value = count.incrementAndGet();</span><br><span class="line">                            <span class="keyword">if</span> (value &gt;= selected.size()) &#123;</span><br><span class="line">                                ref.offer(e);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//当前线程使用poll的方式指定时间等待获取数据，如果成功。返回结果。</span></span><br><span class="line">                Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS);</span><br><span class="line">                <span class="keyword">if</span> (ret <span class="keyword">instanceof</span> Throwable) &#123;</span><br><span class="line">                    Throwable e = (Throwable) ret;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(e <span class="keyword">instanceof</span> RpcException ? ((RpcException) e).getCode() : <span class="number">0</span>, <span class="string">"Failed to forking invoke provider "</span> + selected + <span class="string">", but no luck to perform the invocation. Last error is: "</span> + e.getMessage(), e.getCause() != <span class="keyword">null</span> ? e.getCause() : e);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> (Result) ret;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="string">"Failed to forking invoke provider "</span> + selected + <span class="string">", but no luck to perform the invocation. Last error is: "</span> + e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// clear attachments which is binding to current thread.</span></span><br><span class="line">            RpcContext.getContext().clearAttachments();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="forking（并行调用，有一个返回成功即可）"><a href="#forking（并行调用，有一个返回成功即可）" class="headerlink" title="forking（并行调用，有一个返回成功即可）"></a>forking（并行调用，有一个返回成功即可）</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ForkingClusterInvoker</span>&lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractClusterInvoker</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">AvailableClusterInvoker</span><span class="params">(Directory&lt;T&gt; directory)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(directory);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ExecutorService executor = Executors.newCachedThreadPool(</span><br><span class="line">            <span class="keyword">new</span> NamedInternalThreadFactory(<span class="string">"forking-cluster-timer"</span>, <span class="keyword">true</span>));</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function">ublic Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            checkInvokers(invokers, invocation);</span><br><span class="line">            <span class="keyword">final</span> List&lt;Invoker&lt;T&gt;&gt; selected;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> forks = getUrl().getParameter(Constants.FORKS_KEY, Constants.DEFAULT_FORKS);</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> timeout = getUrl().getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT);</span><br><span class="line">            <span class="keyword">if</span> (forks &lt;= <span class="number">0</span> || forks &gt;= invokers.size()) &#123;</span><br><span class="line">                selected = invokers;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                selected = <span class="keyword">new</span> ArrayList&lt;&gt;(); </span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; forks; i++) &#123;</span><br><span class="line">                    <span class="comment">// 负载均衡选取invoker</span></span><br><span class="line">                    Invoker&lt;T&gt; invoker = select(loadbalance, invocation, invokers, selected);</span><br><span class="line">                    <span class="keyword">if</span> (!selected.contains(invoker)) &#123;</span><br><span class="line">                        <span class="comment">//负载均衡 将选取的invoker 添加到 selected集合中</span></span><br><span class="line">                        selected.add(invoker)</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            RpcContext.getContext().setInvokers((List) selected);</span><br><span class="line">            <span class="keyword">final</span> AtomicInteger count = <span class="keyword">new</span> AtomicInteger();</span><br><span class="line">            <span class="keyword">final</span> BlockingQueue&lt;Object&gt; ref = <span class="keyword">new</span> LinkedBlockingQueue&lt;&gt;(); <span class="comment">//阻塞队列</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">final</span> Invoker&lt;T&gt; invoker : selected) &#123;</span><br><span class="line">                executor.execute(<span class="keyword">new</span> Runnable() &#123;<span class="comment">//将任务提交到线程池中</span></span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                        <span class="keyword">try</span> &#123;</span><br><span class="line">                            Result result = invoker.invoke(invocation);</span><br><span class="line">                            ref.offer(result); <span class="comment">//将结果添加阻塞对垒中</span></span><br><span class="line">                        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                            <span class="keyword">int</span> value = count.incrementAndGet();</span><br><span class="line">                            <span class="keyword">if</span> (value &gt;= selected.size()) &#123;</span><br><span class="line">                                ref.offer(e);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">//当前线程使用poll的方式指定时间等待获取数据，如果成功。返回结果。</span></span><br><span class="line">                Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS);</span><br><span class="line">                <span class="keyword">if</span> (ret <span class="keyword">instanceof</span> Throwable) &#123;</span><br><span class="line">                    Throwable e = (Throwable) ret;</span><br><span class="line">                    <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(e <span class="keyword">instanceof</span> RpcException ? ((RpcException) e).getCode() : <span class="number">0</span>, <span class="string">"Failed to forking invoke provider "</span> + selected + <span class="string">", but no luck to perform the invocation. Last error is: "</span> + e.getMessage(), e.getCause() != <span class="keyword">null</span> ? e.getCause() : e);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">return</span> (Result) ret;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RpcException(<span class="string">"Failed to forking invoke provider "</span> + selected + <span class="string">", but no luck to perform the invocation. Last error is: "</span> + e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// clear attachments which is binding to current thread.</span></span><br><span class="line">            RpcContext.getContext().clearAttachments();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>###BroadcastClusterInvoker(广播模式，有一个报错就报错)</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">   <span class="function"><span class="keyword">public</span> Result <span class="title">doInvoke</span><span class="params">(<span class="keyword">final</span> Invocation invocation, List&lt;Invoker&lt;T&gt;&gt; invokers, LoadBalance loadbalance)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">        <span class="comment">//检查invokers，即为空，则抛出异常</span></span><br><span class="line">        checkInvokers(invokers, invocation);</span><br><span class="line">        RpcContext.getContext().setInvokers((List) invokers);</span><br><span class="line">        <span class="comment">//保存最后一次调用异常</span></span><br><span class="line">        RpcException exception = <span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">//保存最后一次调用结果</span></span><br><span class="line">        Result result = <span class="keyword">null</span>;</span><br><span class="line">        <span class="comment">//遍历候选的invoker集合，调用invoker</span></span><br><span class="line">        <span class="keyword">for</span> (Invoker&lt;T&gt; invoker : invokers) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                result = invoker.invoke(invocation);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (RpcException e) &#123;</span><br><span class="line">                exception = e;</span><br><span class="line">                logger.warn(e.getMessage(), e);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">                exception = <span class="keyword">new</span> RpcException(e.getMessage(), e);</span><br><span class="line">                logger.warn(e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//如果有错误就返回</span></span><br><span class="line">        <span class="keyword">if</span> (exception != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> exception;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//没有错误，返回结果</span></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -349,7 +349,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2019 张春辉
+    		&copy; 2020 张春辉
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
@@ -432,15 +432,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">服务容错</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">url 总线</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">服务限流</a>
+                <a href="javascript:void(0)" class="js-tag color5">服务容错</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -448,11 +444,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">结果缓存</a>
+                <a href="javascript:void(0)" class="js-tag color5">服务限流</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">select()负载均衡</a>
+                <a href="javascript:void(0)" class="js-tag color5">结果缓存</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -460,7 +456,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">spi扩展机制</a>
+                <a href="javascript:void(0)" class="js-tag color3">select()负载均衡</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -468,11 +464,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
+                <a href="javascript:void(0)" class="js-tag color3">spi扩展机制</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
+                <a href="javascript:void(0)" class="js-tag color3">jdk动态代理和cglib动态代理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -480,11 +476,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
+                <a href="javascript:void(0)" class="js-tag color4">jvm 是如何来处理异常的</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+                <a href="javascript:void(0)" class="js-tag color5">sqlSource 创建流程</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -496,6 +492,18 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mapper接口获取代码对象过程</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">executor</a>
               </li>
              
@@ -504,11 +512,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
+                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">resultSetHandler</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -516,19 +524,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">mybatis四大对象</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">主键返回</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">slice切片那些事</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -536,7 +532,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">servelt的生命周期以及源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">eureka 源码解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -548,23 +556,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">springmvc 初始化</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">tx 事务管理</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Aware ，benPostProcessor 接口</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
+                <a href="javascript:void(0)" class="js-tag color1">AOP解析</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -576,11 +572,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
+                <a href="javascript:void(0)" class="js-tag color3">二，三级缓存解决循环依赖</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
+                <a href="javascript:void(0)" class="js-tag color3">变量的可见性，指令重排序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -588,11 +584,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
+                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">选举源码解析</a>
+                <a href="javascript:void(0)" class="js-tag color5">常见问题以及知识点</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">技术内幕</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -600,27 +600,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">sychronized</a>
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">五种单例设计模式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">AtomicInteger</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -632,11 +620,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">常见问题解析</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池原理，callable/future原理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">sychronized wait notify</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">lock 实现原理</a>
+                <a href="javascript:void(0)" class="js-tag color4">ArrayBlockingQueue</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -644,11 +640,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
+                <a href="javascript:void(0)" class="js-tag color5">lock 实现原理</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+                <a href="javascript:void(0)" class="js-tag color5">测试数据</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -656,11 +652,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -668,11 +660,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">类加载顺序</a>
+                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">装饰者模式</a>
+                <a href="javascript:void(0)" class="js-tag color2">抽取一个抽象模板类，同时定义模板方法 对于模板方法的实现，在子类中去实现</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">静态代理</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">适配器模式</a>
               </li>
              
               <li class="article-tag-list-item">
